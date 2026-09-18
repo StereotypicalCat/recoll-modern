@@ -43,6 +43,43 @@ The product is four specs, built in order. Each gets its own spec, plan and revi
 - An HTTP API consumed by both the web UI and the MCP server, so the two never diverge.
 - A Docker image containing Recoll itself, plus compose wiring for document volumes and index storage.
 
+### Component boundaries
+
+| Module | Responsibility |
+|---|---|
+| `api/` | HTTP transport, validation, auth dependencies and serialization |
+| `domain/` | Framework-independent collection, document, membership, rule and job behavior |
+| `storage/` | SQLite migrations, transactions and repositories |
+| `indexing/` | Discovery, hashing, directory-rule reconciliation, map export and queue worker |
+| `engine/` | The search/index Protocol, fake implementation and Recoll adapter |
+| `app.py` | Configuration, dependency wiring and lifecycle |
+
+Only `engine/` may import Recoll or invoke `recollindex`. Membership changes first establish desired
+state in SQLite, atomically export the helper's flat map, then force-index affected canonical paths.
+Engine retries are therefore idempotent. Persistent directory rules reconcile at startup and on an
+explicit reindex, not through live filesystem monitoring.
+
+### Storage model
+
+`collections`, `documents` and `document_paths` hold identity and canonical paths. Membership provenance
+is normalized: `direct_memberships` holds explicit files and snapshot expansions; `directory_rules`,
+`directory_rule_exclusions` and `rule_memberships` hold persistent additions; and
+`membership_exclusions` holds per-file overrides against rule-derived membership. Effective membership
+is direct membership union non-excluded rule membership, so direct additions remain additive.
+
+`jobs` and `job_file_errors` make work and partial failures durable. `users` and hashed-token `sessions`
+provide authentication. `schema_migrations` is forward-only. The exact columns and constraints are the
+contract in `docs/specs/001-search-engine-api.md`.
+
+### HTTP boundary
+
+The resource groups are auth, health, read-only file browsing, collections and membership sources,
+directory rules, scoped search, document text/original retrieval, and indexing jobs. Search callers
+select returned fields; only `document_id` is unconditional, and inline full text is bounded. Every
+route, cookie, redirect, OpenAPI URL and generated link supports a configured mount prefix. Forwarded
+prefix and origin data are used only from trusted proxies. The exact endpoints and error codes are the
+contract in `docs/specs/001-search-engine-api.md`.
+
 ## Verified Recoll mechanics
 
 Established empirically on 2026-09-18 in a throwaway `debian:trixie-slim` container running
@@ -83,14 +120,12 @@ Closed by the 001 brainstorm (2026-09-18) — see `docs/DECISIONS.md` for the re
 3. ~~Indexing trigger~~ — an in-process job queue, backed by SQLite.
 4. ~~Stack~~ — Python + FastAPI, managed with `uv`.
 5. ~~Auth and exposure~~ — real authentication in 001; user administration deferred to 004.
-6. ~~Result presentation~~ — metadata plus Recoll snippets; full text and file download are separate
-   endpoints.
+6. ~~Result presentation~~ — callers select result fields; metadata plus snippets is the default, inline
+   text is bounded, and full text and file download are separate endpoints.
 
-Still open, to be closed by the remaining sections of the 001 design:
-
-- Component boundaries and the SQLite schema.
-- API surface, pagination, and error semantics.
-- Test strategy, including how tests skip when the container is down.
+The remaining 001 design questions — component boundaries, schema, HTTP surface, pagination, error
+semantics and test strategy — are closed in `docs/specs/001-search-engine-api.md`. That spec remains
+draft until maintainer sign-off.
 
 ## External dependencies
 

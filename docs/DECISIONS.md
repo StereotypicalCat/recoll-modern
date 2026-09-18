@@ -3,6 +3,53 @@
 Append-only, newest first. Never edit or delete an entry — supersede it with a new one that links back.
 One entry per decision a future maintainer would otherwise have to reverse-engineer.
 
+## 2026-09-18 — Deployment supports a configured URL subpath
+**Status:** accepted
+**Context:** the service may sit behind an existing reverse proxy under a path such as `/recoll`, not at
+the origin root. Hard-coded root URLs break redirects, cookies, OpenAPI and document links there.
+**Decision:** one configured external mount prefix drives routing, generated URLs and cookie scope.
+Forwarded scheme, host and prefix values are honored only from explicitly trusted proxies.
+**Alternatives:** root-only hosting (needlessly constrains deployment); trust every forwarded header
+(lets a direct client forge external URLs and cookie paths).
+**Consequences:** API and end-to-end tests run at both `/` and a non-root prefix. Proxy configuration is
+part of deployment documentation, and all URL generation goes through one boundary.
+
+---
+
+## 2026-09-18 — Search result fields are caller-selected
+**Status:** accepted
+**Supersedes:** the fixed result shape in "Search results carry metadata and snippets, not full text"
+(below, same date). The metadata-plus-snippets shape remains the default, not the only representation.
+**Context:** browser and MCP consumers have different response-size needs, and users need to choose
+whether results include metadata, snippets, extracted text or retrieval links.
+**Decision:** `document_id` is unconditional; callers select all other result fields. Inline extracted
+text is opt-in, bounded and marked when truncated. Authenticated endpoints return full extracted text
+and stream the canonical original separately.
+**Alternatives:** one fixed rich shape (wastes bandwidth and agent context); metadata-only search with a
+follow-up per hit (too many round trips); unbounded full text inline (a book can dominate the response).
+**Consequences:** field projection is part of the engine/API contract. Generated retrieval links honor
+the configured mount prefix, and original-file responses require range and safe-disposition handling.
+
+---
+
+## 2026-09-18 — Directory membership has normalized additive provenance
+**Status:** accepted
+**Context:** users need both one-time directory expansion and persistent directory membership, including
+the ability to omit metadata subdirectories such as `.calibre`. Overlapping sources must not make
+removal order-dependent.
+**Decision:** direct file additions and snapshot expansions are durable direct membership. Persistent
+directory rules materialize their own contributed documents and hold exact recursive exclusions scoped
+to the rule. Per-file removal creates an override against rule-derived membership; an explicit direct
+addition still wins. Persistent rules reconcile at startup and explicit reindex, not through watching.
+**Alternatives:** one polymorphic source ledger (weaker relational constraints); recompute every rule on
+demand (slow and nondeterministic); persistent rules without provenance (removing one rule can erase
+membership contributed by another).
+**Consequences:** the schema has separate direct, rule-derived and exclusion tables. Directory symlinks
+are never followed; file symlinks are accepted only inside the document root. Jobs default to
+best-effort, while strict jobs scan first and apply no membership changes if any file fails.
+
+---
+
 ## 2026-09-18 — Document identity is a content hash, not a path
 **Status:** accepted
 **Context:** the document set may contain files that share a name but differ in content, and files that

@@ -11,9 +11,10 @@ Where the workflow stands (`AGENTS.md` -> Workflow: brainstorm -> spec -> plan -
 
 - Brainstorm for spec 001: **done.** All six design questions in `docs/ARCHITECTURE.md` are closed, with
   reasoning in `docs/DECISIONS.md`.
-- Spec `docs/specs/001-search-engine-api.md`: **written, `status: draft`.** It has had its self-review
-  pass but **has not been signed off by the maintainer.** Do not start a plan or write code against it
-  until its front matter says `approved`.
+- Spec `docs/specs/001-search-engine-api.md`: **written, `status: draft`.** Its missing schema, component,
+  endpoint and test designs were completed after maintainer-guided review, including directory rules,
+  selectable search fields and subpath hosting. It **has not received final maintainer sign-off.** Do
+  not start a plan or write code against it until its front matter says `approved`.
 - Plan `docs/plans/001-search-engine-api.md`: **not written.** It is the next artefact, and only after
   sign-off.
 
@@ -37,7 +38,7 @@ Things a resuming agent will otherwise get wrong:
 ## Now
 - [x] Answer the six open design questions in `docs/ARCHITECTURE.md` — closed 2026-09-18, reasoning in
       `docs/DECISIONS.md`.
-- [ ] Finish the 001 design: component boundaries and SQLite schema, API surface and error semantics,
+- [x] Finish the 001 design: component boundaries and SQLite schema, API surface and error semantics,
       test strategy. Then write `docs/specs/001-search-engine-api.md`.
 - [ ] Fill the `Commands` section of `AGENTS.md` and delete its `TODO(maintainer)` line — must happen in
       the same commit that scaffolds the app, with every command actually run.

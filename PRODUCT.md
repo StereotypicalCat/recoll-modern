@@ -12,8 +12,9 @@ web
 
 ## Stack
 
-Undecided. Greenfield: no framework, no scaffold. The stack is a user decision and has not been made.
-See `AGENTS.md` for the toolchains actually installed on the host.
+The backend stack was confirmed during the 001 design: Python + FastAPI, managed with `uv`, because
+Recoll provides native Python bindings. The frontend stack remains undecided. No application has been
+scaffolded yet. See `docs/DECISIONS.md` for the decision and `AGENTS.md` for installed toolchains.
 
 ## Users
 
