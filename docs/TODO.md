@@ -5,7 +5,7 @@ Small, specific, independently actionable. Remove only when actually done.
 
 ## Resume here
 
-Last touched 2026-09-18. Still greenfield: **no application code exists.**
+Last touched 2026-09-18. Spec 001 implementation is in progress.
 
 Where the workflow stands (`AGENTS.md` -> Workflow: brainstorm -> spec -> plan -> TDD -> review):
 
@@ -15,9 +15,12 @@ Where the workflow stands (`AGENTS.md` -> Workflow: brainstorm -> spec -> plan -
   selectable search fields, subpath hosting and the packaging seam for deferred desktop spec 005.
 - Plan `docs/plans/001-search-engine-api.md`: **approved 2026-09-18.** Its listed Python runtime and
   development dependencies are approved. Execution uses the subagent-driven workflow.
+- Plan Tasks 1–3 are complete and independently reviewed: Python/FastAPI scaffold and configuration,
+  SQLite schema/migrations, and collection identity/repository CRUD. Their checkboxes are current in the
+  plan. At the checkpoint, `uv sync --locked`, all 27 tests, Ruff, mypy and `uv build` passed.
 
-The next action is Task 1 of the approved plan, using an isolated worktree and the subagent-driven
-workflow.
+The next action is Task 4, "Discover files and maintain content-hash identity," using the
+subagent-driven workflow. Do not repeat Tasks 1–3.
 
 Things a resuming agent will otherwise get wrong:
 
@@ -28,20 +31,19 @@ Things a resuming agent will otherwise get wrong:
   not recalled. Trust them over intuition, and re-verify only if Recoll's major version moves.
 - The throwaway spike container is not part of the repo and does not survive the session. Everything
   worth keeping from it is already in `docs/`.
-- `uv` was installed on this host during this session and `AGENTS.md` was corrected accordingly. The
-  `Commands` section of `AGENTS.md` is still a `TODO(maintainer)` stub and must be filled in the same
-  commit that scaffolds the app, with every command actually run first.
+- `uv` was installed on this host during this session and `AGENTS.md` was corrected accordingly. Task 1
+  replaced its command stub in the scaffold commit after running every listed command.
 
 ## Now
 - [x] Answer the six open design questions in `docs/ARCHITECTURE.md` — closed 2026-09-18, reasoning in
       `docs/DECISIONS.md`.
 - [x] Finish the 001 design: component boundaries and SQLite schema, API surface and error semantics,
       test strategy. Then write `docs/specs/001-search-engine-api.md`.
-- [ ] Fill the `Commands` section of `AGENTS.md` and delete its `TODO(maintainer)` line — must happen in
+- [x] Fill the `Commands` section of `AGENTS.md` and delete its `TODO(maintainer)` line — must happen in
       the same commit that scaffolds the app, with every command actually run.
 
 ## Next
-- [ ] Scaffold Python + FastAPI with `uv`; verify install/dev/test/lint/typecheck/build by running them,
+- [x] Scaffold Python + FastAPI with `uv`; verify install/dev/test/lint/typecheck/build by running them,
       then record the verified ones in `AGENTS.md`.
 - [ ] Dockerfile + compose: Recoll in the image, document volume mounted `:ro`, writable volumes for
       the index and SQLite.
@@ -64,7 +66,9 @@ Things a resuming agent will otherwise get wrong:
       paths exist, and fail if `AGENTS.md` exceeds 150 lines.
 
 ## Known issues
-- None recorded yet.
+- Task 3's repository ID test checks the generated collection ID prefix and length rather than asserting
+  the full `^c[0-9a-f]{10}$` regex. The implementation uses `secrets.token_hex(5)` and is correct; add
+  the stronger regression assertion when work resumes.
 
 ## Recurring
 - [ ] Add an `AGENTS.md` rule only in response to a real, observed agent failure — one line, ideally with
