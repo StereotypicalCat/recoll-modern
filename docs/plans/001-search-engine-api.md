@@ -190,7 +190,7 @@ git commit -m "chore: scaffold Python service"
 - Consumes: `Settings.database_path`
 - Produces: `Database(path: Path)`, `Database.connect()`, `Database.transaction()` and `Database.migrate()`
 
-- [ ] **Step 1: Write failing migration and constraint tests**
+- [x] **Step 1: Write failing migration and constraint tests**
 
 ```python
 def test_migrate_creates_all_tables(database: Database) -> None:
@@ -209,13 +209,13 @@ def test_one_canonical_path_per_document(database: Database) -> None:
 
 `EXPECTED_TABLES` names all thirteen spec tables. Add tests for foreign keys, unique normalized collection names, unique directory rules, and cascade behavior.
 
-- [ ] **Step 2: Run the focused tests and observe failure**
+- [x] **Step 2: Run the focused tests and observe failure**
 
 Run: `uv run pytest tests/storage/test_database.py tests/storage/test_migrations.py -v`
 
 Expected: FAIL because `Database` and migration 001 do not exist.
 
-- [ ] **Step 3: Implement connection and transaction policy**
+- [x] **Step 3: Implement connection and transaction policy**
 
 Every connection sets `row_factory=sqlite3.Row`, `PRAGMA foreign_keys=ON`, `PRAGMA journal_mode=WAL`, and `PRAGMA busy_timeout=5000`. `transaction()` begins `IMMEDIATE`, commits on success, rolls back on exception, and closes the connection.
 
@@ -260,7 +260,7 @@ CREATE TABLE sessions(token_hash TEXT PRIMARY KEY, csrf_hash TEXT NOT NULL,
 
 Migration application is ordered, transactional, records each version, and refuses duplicate version numbers.
 
-- [ ] **Step 4: Run tests, lint, typecheck, and commit**
+- [x] **Step 4: Run tests, lint, typecheck, and commit**
 
 Run: `uv run pytest tests/storage -v && uv run ruff check . && uv run mypy src tests`
 
