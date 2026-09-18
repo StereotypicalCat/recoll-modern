@@ -15,8 +15,9 @@ TODO(maintainer): no stack yet. Fill install/dev/test/single-test/lint/typecheck
 commit that scaffolds the app, and delete this line. These must be what CI runs.
 
 Installed on this host: `docker` 29.5.2 with `docker compose`, `node` 20.19.2, `npm` 9.2.0, `bun` 1.3.14,
-`yarn` 1.22.22, `python3` 3.13.5, `dotnet` 10.0.302.
-**Absent: `pnpm`, `uv`, `poetry`, `go`, `cargo`** — do not write commands that assume them.
+`yarn` 1.22.22, `python3` 3.13.5, `uv` 0.12.16 (in `~/.local/bin`, already on `PATH`), `dotnet` 10.0.302.
+**Absent: `pnpm`, `poetry`, `go`, `cargo`** — do not write commands that assume them.
+`uv` is the package manager for this project; do not use bare `pip`, `venv`, or `poetry`.
 
 ## Rules
 
