@@ -3,6 +3,50 @@
 Append-only, newest first. Never edit or delete an entry — supersede it with a new one that links back.
 One entry per decision a future maintainer would otherwise have to reverse-engineer.
 
+## 2026-09-18 — Document identity is a content hash, not a path
+**Status:** accepted
+**Context:** the document set may contain files that share a name but differ in content, and files that
+differ in name but are byte-identical. Keying membership on path merges neither and distinguishes
+neither correctly.
+**Decision:** a document is identified by the SHA-256 of its bytes. `documents` is keyed by that hash,
+`document_paths` maps many paths to one document, and membership attaches to the document. Each document
+has one **canonical path**, and only that path is reported to Recoll as belonging to any collection.
+**Alternatives:** path as identity (byte-identical copies appear as separate hits for the same content);
+relying on Recoll to deduplicate (it cannot — `md5` is empty and `sig` is only size + mtime).
+**Consequences:** duplicate copies are indexed by Recoll but belong to no collection, so the required
+collection scope makes them unreachable — verified: a scoped search over a tree with one duplicated file
+returned it once. Deleting a canonical path must promote another path and force a reindex, or the
+document silently leaves every collection.
+
+---
+
+## 2026-09-18 — Membership is supplied at index time; documents are never written to
+**Status:** accepted
+**Supersedes:** "One index; collection membership is an opaque per-file tag" (below, same date), which
+carried membership in a `user.collection` extended attribute. That entry's xattr mechanism must not be
+implemented.
+**Context:** the service must work with **read-only** access to the documents it indexes. Writing an
+xattr requires write access, so the superseded design fails outright on a `:ro` mount — verified:
+`setfattr` returns "Read-only file system".
+**Decision:** membership reaches Recoll through `metadatacmds` in `recoll.conf`
+(`metadatacmds = ; collection = <helper> %f`), a documented Recoll facility for external metadata.
+Recoll runs the helper per file at index time; the helper answers from our own store. Everything the
+superseded entry established about opaque IDs, multi-membership and single-ranked-set OR queries still
+holds — only the transport changes.
+**Alternatives:** filtering Recoll's results against SQLite after the query (breaks paging and total
+counts); one index per collection (cannot express two files in one directory belonging to different
+collections); requiring a writable document volume (contradicts the requirement).
+**Consequences:** SQLite becomes the *only* store of membership rather than the authoritative copy of
+two, so drift between store and index is now impossible and no reconcile path is needed. Extended
+attributes are no longer a deployment requirement. A membership change needs
+`recollindex -i -Z <path>` — verified that neither a plain incremental run nor `recollindex -i` notices
+it, because Recoll's change signature is size + mtime and a membership change touches neither.
+The helper is spawned once per file per index run, so it must start fast: over 400 files, indexing took
+0.09s with no helper, 0.13s with a shell+awk helper and 0.82s with a `python3` helper. The service
+exports a flat map from SQLite for a small non-Python helper to read.
+
+---
+
 ## 2026-09-18 — Search results carry metadata and snippets, not full text
 **Status:** accepted
 **Context:** Recoll can return metadata, keyword-in-context snippets, extracted plain text and the

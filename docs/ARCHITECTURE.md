@@ -36,8 +36,8 @@ The product is four specs, built in order. Each gets its own spec, plan and revi
 ## Intended shape
 
 - **One** Recoll index for all documents, not one per collection. Collection membership is per-file
-  metadata, not directory layout, so two files in the same directory can belong to different
-  collections.
+  metadata supplied by the service at index time, not directory layout, so two files in the same
+  directory can belong to different collections and the documents are never modified.
 - A Python service owns Recoll through its native Python bindings (`from recoll import recoll`).
 - SQLite holds collections, membership, indexing jobs, users and sessions.
 - An HTTP API consumed by both the web UI and the MCP server, so the two never diverge.
@@ -46,30 +46,39 @@ The product is four specs, built in order. Each gets its own spec, plan and revi
 ## Verified Recoll mechanics
 
 Established empirically on 2026-09-18 in a throwaway `debian:trixie-slim` container running
-Recoll 1.43.0 / Xapian 1.4.29. Re-verify if the Recoll major version changes.
+Recoll 1.43.0 / Xapian 1.4.29, with the document tree bind-mounted **read-only**. Re-verify if the
+Recoll major version changes.
 
-- **Per-file metadata is indexable and queryable.** A `fields` file declaring
-  `[xattrtofields] collection = collection`, `[prefixes] collection = XYCOLL` and `[stored] collection =`
-  makes the `user.collection` extended attribute a queryable field (`collection:<value>`), returned on
-  each result. Recoll strips the `user.` prefix itself.
-- **Multi-membership works.** A space-separated xattr value puts one file in several collections. An
-  `OR` across collections returns it **once**, in a single coherently ranked result set — Xapian does
-  the ranking, so no application-side merging is needed.
-- **A plain incremental `recollindex` does not see xattr-only changes.** It compares mtime, and
-  `setfattr` does not change mtime; `touch` does not help either. `recollindex -i <file>` does pick the
-  change up, in roughly 20ms for one file. Retagging therefore costs one file, never a rebuild.
-- **The field value is tokenised and matched case-insensitively.** A tag of `cook-books` is matched by
-  `collection:cook` *and* `collection:books`; `TechBooks` is matched by `collection:techbooks`. Using
-  human-readable collection names as tags would let collections silently bleed into one another.
-- **An unscoped query returns every document, including untagged ones.** Recoll will not enforce
-  collection scoping; the API layer must.
+- **Documents are never written to.** Membership reaches the index through `metadatacmds` in
+  `recoll.conf` (`metadatacmds = ; collection = <helper> %f`), which Recoll runs per file at index time
+  to fetch external metadata. The helper answers from our own store. Indexing a read-only mount
+  succeeds; `touch` and `setfattr` on it both fail, as they must.
+- **Extended attributes are NOT usable.** An earlier design carried membership in a `user.collection`
+  xattr. It works only when the documents are writable, so it is superseded — see `docs/DECISIONS.md`.
+- **Multi-membership works.** A space-separated helper response puts one file in several collections.
+  An `OR` across collections returns it **once**, in a single coherently ranked set: Xapian does the
+  ranking, so no application-side merging is needed.
+- **Membership changes need a forced per-file reindex.** Neither a plain incremental run nor
+  `recollindex -i <file>` notices a change that did not touch the file — Recoll's change signature is
+  size + mtime (observed as `sig` = `'<size><mtime>'`), and a membership change alters neither.
+  `recollindex -i -Z <file>` does pick it up, at roughly 15ms per file, and accepts several paths.
+- **The field value is tokenised and matched case-insensitively.** A value of `cook-books` is matched by
+  `collection:cook` *and* `collection:books`; `TechBooks` by `collection:techbooks`. Collection
+  identifiers must therefore be opaque single tokens with no separators. Tested clean with `^c[0-9a-f]+$`.
+- **Recoll has no content hash.** `md5` is empty and `sig` is only size + mtime, so document identity by
+  content is ours to compute and store.
+- **An unscoped query returns every document**, including ones belonging to no collection. Recoll will
+  not enforce collection scoping; the API layer must.
+- **The helper must start fast.** Recoll spawns it once per file per index run. Over 400 files: 0.09s
+  with no helper, 0.13s for a shell+awk helper, 0.82s for a `python3` helper — interpreter startup
+  dominates. The helper reads a flat map file exported from SQLite; it is not a Python process.
 
 ## Open design questions
 
 Closed by the 001 brainstorm (2026-09-18) — see `docs/DECISIONS.md` for the reasoning:
 
-1. ~~Collection isolation~~ — one index; membership is an opaque collection ID in a `user.collection`
-   xattr; human names live only in SQLite.
+1. ~~Collection isolation~~ — one index; membership is an opaque collection ID supplied to Recoll by
+   `metadatacmds` at index time; human names live only in SQLite; documents are never written to.
 2. ~~Cross-collection search~~ — allowed, but only when explicitly requested. Ranking is Xapian's.
 3. ~~Indexing trigger~~ — an in-process job queue, backed by SQLite.
 4. ~~Stack~~ — Python + FastAPI, managed with `uv`.
@@ -90,7 +99,7 @@ Still open, to be closed by the remaining sections of the 001 design:
 | Recoll (in-container) | All indexing and search. Not installed on the host — see `AGENTS.md` Rules. |
 | Docker + compose | The only supported way to run the service. |
 | Document volumes | Nothing to index; collections resolve to empty. |
-| Extended-attribute support on the document volume | Collection membership. Without xattrs every document is untagged and every scoped search returns nothing — a silent failure, so it must be checked at startup. |
+| A writable volume for the index and SQLite | All state. The document volume itself may be mounted read-only. |
 
 ## Invariants
 
@@ -98,6 +107,10 @@ Still open, to be closed by the remaining sections of the 001 design:
   refuses a search that does not name one.
 - Collection identity in the index is an opaque single-token ID, never a user-supplied name, so
   collections cannot bleed into one another and renaming never touches the index.
+- The service never writes to the documents it indexes. The document volume is treated as read-only
+  even when it is not, and the deployment mounts it `:ro`.
+- Document identity is the SHA-256 of file content, not its path or name: two files with the same name
+  and different content are two documents, and one file reachable by several paths is one document.
 - Indexed content is never written into the repository.
 
 ## Known rough edges

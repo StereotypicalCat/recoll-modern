@@ -14,9 +14,15 @@ Small, specific, independently actionable. Remove only when actually done.
 ## Next
 - [ ] Scaffold Python + FastAPI with `uv`; verify install/dev/test/lint/typecheck/build by running them,
       then record the verified ones in `AGENTS.md`.
-- [ ] Dockerfile + compose: Recoll in the image, volumes for documents and indexes.
-- [ ] Startup check: refuse to start, loudly, if the document volume does not support extended
-      attributes — without them every scoped search silently returns nothing.
+- [ ] Dockerfile + compose: Recoll in the image, document volume mounted `:ro`, writable volumes for
+      the index and SQLite.
+- [ ] Write the `metadatacmds` membership helper as a fast-starting non-Python program, fed by a flat
+      map exported from SQLite. A `python3` helper made a 400-file index 9x slower; Recoll spawns it
+      once per file per index run.
+- [ ] Re-measure indexing overhead against real documents (PDF, EPUB) rather than small text files —
+      extraction cost should dwarf the helper, but that is an assumption until measured.
+- [ ] Promote a new canonical path and force a reindex when a canonical path disappears, or the
+      document silently leaves every collection it is in.
 - [ ] Recover interrupted indexing jobs at startup; they do not survive a process restart on their own.
 - [ ] Write `PRODUCT.md` properly via `/impeccable init` — the current file is a stub from the initial
       brief, not an interview. Blocks spec 002.
