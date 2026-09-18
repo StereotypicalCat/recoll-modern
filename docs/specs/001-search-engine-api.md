@@ -1,6 +1,6 @@
 ---
-status: draft
-plan: docs/plans/001-search-engine-api.md (not yet written)
+status: approved
+plan: docs/plans/001-search-engine-api.md
 supersedes: none
 ---
 

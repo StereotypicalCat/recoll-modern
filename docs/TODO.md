@@ -11,16 +11,14 @@ Where the workflow stands (`AGENTS.md` -> Workflow: brainstorm -> spec -> plan -
 
 - Brainstorm for spec 001: **done.** All six design questions in `docs/ARCHITECTURE.md` are closed, with
   reasoning in `docs/DECISIONS.md`.
-- Spec `docs/specs/001-search-engine-api.md`: **written, `status: draft`.** Its missing schema, component,
-  endpoint and test designs were completed after maintainer-guided review, including directory rules,
-  selectable search fields and subpath hosting. It **has not received final maintainer sign-off.** Do
-  not start a plan or write code against it until its front matter says `approved`.
-- Plan `docs/plans/001-search-engine-api.md`: **not written.** It is the next artefact, and only after
-  sign-off.
+- Spec `docs/specs/001-search-engine-api.md`: **approved 2026-09-18.** It includes directory rules,
+  selectable search fields, subpath hosting and the packaging seam for deferred desktop spec 005.
+- Plan `docs/plans/001-search-engine-api.md`: **written, status draft.** It needs maintainer sign-off
+  before implementation. Plan approval also approves the listed Python runtime and development
+  dependencies; do not scaffold or add them before that approval.
 
-The next action is to ask the maintainer to review the spec. If they approve it, set `status: approved`
-and invoke the superpowers `writing-plans` skill to produce `docs/plans/001-search-engine-api.md`,
-numbered to match.
+The next action is to ask the maintainer to review the plan and its dependency list. If they approve it,
+change its status to `approved`, commit that gate, and choose either subagent-driven or inline execution.
 
 Things a resuming agent will otherwise get wrong:
 
