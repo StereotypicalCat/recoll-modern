@@ -19,8 +19,10 @@ web UI and (b) an MCP server, running in Docker, with several independent collec
 | `AGENTS.md` | Agent rules; single source of truth |
 | `PRODUCT.md` | Durable product context for the `impeccable` skill |
 | `docs/specs/`, `docs/plans/` | Approved specs and implementation plans |
+| `src/recoll_modern/` | Python service package; configuration, application factory and CLI boundary |
+| `tests/` | Automated service tests |
 
-No source directories exist yet. Add rows here as they appear.
+The initial service scaffold is present; add rows here as its modules appear.
 
 ## Delivery order
 

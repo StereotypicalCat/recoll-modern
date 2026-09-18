@@ -53,7 +53,7 @@
 - Produces: `Settings.from_env(environ: Mapping[str, str]) -> Settings`
 - Produces: console entry point `recoll-modern = recoll_modern.__main__:main`
 
-- [ ] **Step 1: Initialize and declare the approved dependencies**
+- [x] **Step 1: Initialize and declare the approved dependencies**
 
 Run:
 
@@ -65,7 +65,7 @@ uv add --dev pytest pytest-asyncio httpx ruff mypy
 
 Set `requires-python = ">=3.13,<3.14"`, configure `uv_build`, strict mypy, Ruff formatting/linting, and pytest paths in `pyproject.toml`. Keep the generated `uv.lock`.
 
-- [ ] **Step 2: Write the failing configuration tests**
+- [x] **Step 2: Write the failing configuration tests**
 
 ```python
 def test_settings_are_rooted_in_configured_state(tmp_path: Path) -> None:
@@ -85,13 +85,13 @@ def test_root_path_rejects_trailing_slash() -> None:
         Settings.from_env({"RECOLL_MODERN_ROOT_PATH": "/recoll/"})
 ```
 
-- [ ] **Step 3: Run the test and observe the missing module failure**
+- [x] **Step 3: Run the test and observe the missing module failure**
 
 Run: `uv run pytest tests/unit/test_config.py -v`
 
 Expected: FAIL because `recoll_modern.config.Settings` does not exist.
 
-- [ ] **Step 4: Implement immutable settings and the CLI seam**
+- [x] **Step 4: Implement immutable settings and the CLI seam**
 
 ```python
 @dataclass(frozen=True, slots=True)
@@ -147,7 +147,7 @@ trusted proxies, 20,000 characters, and a 100,000-character hard maximum. Add a 
 response `{"status": "starting"}`; Task 10 replaces that route with real readiness. `main()` calls
 `uvicorn.run(create_app(settings), host=settings.host, port=settings.port)`.
 
-- [ ] **Step 5: Record the commands that CI will run**
+- [x] **Step 5: Record the commands that CI will run**
 
 Replace the command TODO in `AGENTS.md` with:
 
@@ -163,7 +163,7 @@ build: uv build
 
 Add `src/recoll_modern/` and `tests/` to the architecture map. Ignore `.venv/`, `dist/`, coverage output, SQLite files, membership maps, Recoll config, and index data without ignoring committed configuration templates.
 
-- [ ] **Step 6: Verify and commit**
+- [x] **Step 6: Verify and commit**
 
 Run: `uv run pytest tests/unit/test_config.py -v && uv run ruff check . && uv run mypy src tests && uv build`
 
