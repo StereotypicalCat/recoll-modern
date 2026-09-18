@@ -285,7 +285,7 @@ git commit -m "feat: add SQLite persistence foundation"
 - Produces: `normalize_name(value: str) -> tuple[str, str]`
 - Produces: `CollectionService.create/get/list/patch/delete`
 
-- [ ] **Step 1: Write failing identity and CRUD tests**
+- [x] **Step 1: Write failing identity and CRUD tests**
 
 ```python
 def test_collection_ids_are_opaque() -> None:
@@ -304,13 +304,13 @@ def test_rename_does_not_enqueue_work() -> None:
     assert jobs.enqueued == []
 ```
 
-- [ ] **Step 2: Run tests and observe missing domain types**
+- [x] **Step 2: Run tests and observe missing domain types**
 
 Run: `uv run pytest tests/domain/test_collections.py tests/storage/test_collection_repository.py -v`
 
 Expected: FAIL on imports.
 
-- [ ] **Step 3: Implement domain types, errors, normalization, and repository**
+- [x] **Step 3: Implement domain types, errors, normalization, and repository**
 
 `normalize_name` applies Unicode NFC, strips surrounding whitespace for validation, rejects names with no non-whitespace character, preserves the supplied display name, and returns `normalized.casefold()` as `name_key`. Generate IDs from five random bytes and retry on the improbable unique collision.
 
@@ -330,7 +330,7 @@ affected canonical paths.
 
 Map SQLite uniqueness failures to `collection_name_taken`, not raw database text. `delete` returns affected paths before cascading membership rows and never touches the index.
 
-- [ ] **Step 4: Verify and commit**
+- [x] **Step 4: Verify and commit**
 
 Run: `uv run pytest tests/domain/test_collections.py tests/storage/test_collection_repository.py -v && uv run ruff check . && uv run mypy src tests`
 
