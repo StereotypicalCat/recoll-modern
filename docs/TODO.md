@@ -3,6 +3,37 @@
 Durable backlog. Agents append here instead of leaving `TODO` comments in source.
 Small, specific, independently actionable. Remove only when actually done.
 
+## Resume here
+
+Last touched 2026-09-18. Still greenfield: **no application code exists.**
+
+Where the workflow stands (`AGENTS.md` -> Workflow: brainstorm -> spec -> plan -> TDD -> review):
+
+- Brainstorm for spec 001: **done.** All six design questions in `docs/ARCHITECTURE.md` are closed, with
+  reasoning in `docs/DECISIONS.md`.
+- Spec `docs/specs/001-search-engine-api.md`: **written, `status: draft`.** It has had its self-review
+  pass but **has not been signed off by the maintainer.** Do not start a plan or write code against it
+  until its front matter says `approved`.
+- Plan `docs/plans/001-search-engine-api.md`: **not written.** It is the next artefact, and only after
+  sign-off.
+
+The next action is to ask the maintainer to review the spec. If they approve it, set `status: approved`
+and invoke the superpowers `writing-plans` skill to produce `docs/plans/001-search-engine-api.md`,
+numbered to match.
+
+Things a resuming agent will otherwise get wrong:
+
+- The design carried collection membership in a `user.collection` extended attribute for part of this
+  session. **That is superseded** — the documents are read-only. `docs/DECISIONS.md` has both entries,
+  newest first; the older one is left intact by that file's append-only rule, so read the newer one.
+- The Recoll facts in `docs/ARCHITECTURE.md` -> "Verified Recoll mechanics" were measured in a container,
+  not recalled. Trust them over intuition, and re-verify only if Recoll's major version moves.
+- The throwaway spike container is not part of the repo and does not survive the session. Everything
+  worth keeping from it is already in `docs/`.
+- `uv` was installed on this host during this session and `AGENTS.md` was corrected accordingly. The
+  `Commands` section of `AGENTS.md` is still a `TODO(maintainer)` stub and must be filled in the same
+  commit that scaffolds the app, with every command actually run first.
+
 ## Now
 - [x] Answer the six open design questions in `docs/ARCHITECTURE.md` — closed 2026-09-18, reasoning in
       `docs/DECISIONS.md`.
