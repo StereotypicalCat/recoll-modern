@@ -24,8 +24,10 @@ class MemoryCollectionRepository:
 
     collections: dict[str, Collection] = field(default_factory=dict)
     created: list[CollectionCreate] = field(default_factory=list)
+    operations: list[str] = field(default_factory=list)
 
     def create(self, collection: CollectionCreate) -> Collection:
+        self.operations.append("create")
         identifier = f"c{len(self.collections):010x}"
         result = Collection(id=identifier, name=collection.name, description=collection.description)
         self.collections[identifier] = result
@@ -33,13 +35,16 @@ class MemoryCollectionRepository:
         return result
 
     def get(self, collection_id: str) -> Collection | None:
+        self.operations.append("get")
         return self.collections.get(collection_id)
 
     def list(self, limit: int, offset: int) -> CollectionPage:
+        self.operations.append("list")
         values = list(self.collections.values())
         return values[offset : offset + limit], len(values)
 
     def patch(self, collection_id: str, patch: CollectionPatch) -> Collection:
+        self.operations.append("patch")
         collection = self.collections[collection_id]
         description = (
             collection.description
@@ -55,6 +60,7 @@ class MemoryCollectionRepository:
         return result
 
     def delete(self, collection_id: str) -> CollectionPaths:
+        self.operations.append("delete")
         del self.collections[collection_id]
         return []
 
@@ -100,3 +106,16 @@ def test_patch_rejects_unknown_collection(service: CollectionService) -> None:
         service.patch("c000000000", CollectionPatch(name="Reference"))
 
     assert caught.value.code == "collection_not_found"
+
+
+def test_rename_does_not_enqueue_work() -> None:
+    """Fail if a metadata-only rename performs work beyond repository lookup and patch."""
+    repository = MemoryCollectionRepository()
+    service = CollectionService(repository)
+    collection = service.create(CollectionCreate(name="Tech Books"))
+    repository.operations.clear()
+
+    changed = service.patch(collection.id, CollectionPatch(name="Reference"))
+
+    assert changed.name == "Reference"
+    assert repository.operations == ["get", "patch"]
