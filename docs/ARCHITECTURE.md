@@ -24,7 +24,8 @@ No source directories exist yet. Add rows here as they appear.
 
 ## Delivery order
 
-The product is four specs, built in order. Each gets its own spec, plan and review cycle.
+The product is five specs, built in order. Each gets its own spec, plan and review cycle. Spec 005 is a
+future distribution track and starts only after the hosted product through 004 is delivered.
 
 | Spec | Scope |
 |---|---|
@@ -32,6 +33,7 @@ The product is four specs, built in order. Each gets its own spec, plan and revi
 | 002 Web UI | Blocked on `/impeccable init` replacing the `PRODUCT.md` stub, then `DESIGN.md` |
 | 003 MCP server | Thin wrapper over 001's HTTP API |
 | 004 Multi-user management | Roles, user CRUD, per-collection permissions |
+| 005 Cross-platform desktop distribution | Installable shell reusing the web UI and launching the API plus Recoll as bundled sidecars |
 
 ## Intended shape
 
@@ -42,6 +44,9 @@ The product is four specs, built in order. Each gets its own spec, plan and revi
 - SQLite holds collections, membership, indexing jobs, users and sessions.
 - An HTTP API consumed by both the web UI and the MCP server, so the two never diverge.
 - A Docker image containing Recoll itself, plus compose wiring for document volumes and index storage.
+- A packaging seam for a future desktop shell: application logic does not depend on Docker, state paths
+  and listen addresses are configurable, process startup/shutdown is explicit, and every UI operation
+  crosses the same HTTP API. Docker remains the only supported distribution through spec 004.
 
 ### Component boundaries
 
@@ -135,6 +140,12 @@ draft until maintainer sign-off.
 | Docker + compose | The only supported way to run the service. |
 | Document volumes | Nothing to index; collections resolve to empty. |
 | A writable volume for the index and SQLite | All state. The document volume itself may be mounted read-only. |
+
+Docker is the only supported deployment for specs 001–004, not a permanent application-layer
+dependency. Spec 005 will design cross-platform packaging of the web UI, API service, Recoll and its
+document filters. A Tauri-style shell with bundled sidecars is the intended approach; choosing Tauri
+itself and resolving per-platform Recoll licensing, signing, updates and filter coverage are decisions
+for that spec.
 
 ## Invariants
 

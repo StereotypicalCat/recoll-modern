@@ -39,6 +39,8 @@ interface and an MCP server, so the same index is usable by a person in a browse
 - Deployed with Docker on a server; used through a browser.
 - Collections map to bodies of documents the user keeps, named by subject.
 - A second consumer is an MCP client (an AI agent), searching the same collections programmatically.
+- After the hosted product through spec 004 is delivered, a cross-platform installable desktop form is
+  a product goal. It should reuse the web UI and API rather than create a second product surface.
 
 ## Capabilities and Constraints
 

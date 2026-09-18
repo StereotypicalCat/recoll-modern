@@ -3,6 +3,25 @@
 Append-only, newest first. Never edit or delete an entry — supersede it with a new one that links back.
 One entry per decision a future maintainer would otherwise have to reverse-engineer.
 
+## 2026-09-18 — Cross-platform desktop packaging is spec 005
+**Status:** accepted
+**Supersedes:** "The product is four specs, built in order" (below, same date), only by appending a fifth
+delivery after 004; the original order and boundaries of specs 001–004 remain unchanged.
+**Context:** the hosted Docker service should eventually also be usable as a self-contained installable
+application on Linux, macOS and Windows, without distracting from delivery of the core product.
+**Decision:** desktop distribution is spec 005 and starts only after 004. Its intended architecture is a
+Tauri-style shell that reuses the web UI and launches the existing HTTP API plus Recoll as bundled local
+sidecars. Tauri is the leading candidate, not a selected dependency; that choice belongs to 005.
+**Alternatives:** call backend libraries directly from a native shell (creates a second integration
+path); hide Docker behind a launcher (still requires a container runtime and integrates poorly with the
+desktop filesystem).
+**Consequences:** specs 001–004 stay Docker-first, but application logic cannot depend on Docker. State
+paths and listen addresses are configurable, lifecycle is explicit, and UI behavior crosses the HTTP
+API. Spec 005 must resolve per-platform Recoll packaging and licensing, filters, loopback security,
+signing, updates and installer formats before adding dependencies.
+
+---
+
 ## 2026-09-18 — Deployment supports a configured URL subpath
 **Status:** accepted
 **Context:** the service may sit behind an existing reverse proxy under a path such as `/recoll`, not at

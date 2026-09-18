@@ -6,7 +6,7 @@ supersedes: none
 
 # 001 — Search engine and HTTP API
 
-The first of four specs (see `docs/ARCHITECTURE.md`, "Delivery order"). It delivers the Recoll layer and
+The first of five specs (see `docs/ARCHITECTURE.md`, "Delivery order"). It delivers the Recoll layer and
 the HTTP API that specs 002 (web UI) and 003 (MCP server) are both built against. It ships no UI.
 
 ## Why
@@ -25,7 +25,8 @@ text and original-file retrieval · authentication · a read-only file browse en
 subpath hosting · health.
 
 **Out, deferred to a named spec:** the web UI (002) · the MCP server (003) · user administration, roles
-and per-collection permissions (004) · real-time index monitoring · OIDC or forward-auth.
+and per-collection permissions (004) · a cross-platform installable desktop distribution (005, after
+004) · real-time index monitoring · OIDC or forward-auth.
 
 ## Constraints
 
@@ -135,6 +136,9 @@ and are recorded in `docs/ARCHITECTURE.md` under "Verified Recoll mechanics"; th
   explicitly configured proxies.
 - **R30.** Errors use one envelope, `{"error": {"code", "message", "details"}}`, with the codes in the
   table below.
+- **R31.** Docker is packaging, not an application-layer dependency. Document, index, database and
+  membership-map paths plus listen host, port and mount prefix are configuration. Application modules
+  never invoke Docker, and shutdown leaves durable jobs recoverable on the next start.
 
 | Code | Status |
 |---|---|
@@ -163,6 +167,11 @@ its narrow Protocol. A membership job resolves safe paths and hashes content bef
 changes desired state. It then atomically replaces the flat membership map and asks the engine to
 force-reindex affected canonical paths. An engine failure leaves desired state intact; retrying export
 and indexing is idempotent.
+
+Docker is the delivery target for 001, but not an application-layer dependency: state paths and listen
+addresses are configurable, lifecycle is explicit, and the future web UI communicates only through the
+HTTP API. These seams allow spec 005 to package the unchanged UI with the API and Recoll as local
+sidecars; 001 does not select or build a desktop framework.
 
 ## SQLite schema
 
@@ -302,6 +311,8 @@ exists. Unexpected errors return a request ID rather than exception text or file
 - [ ] The service refuses to start with no user and no seeded credentials (R26).
 - [ ] Hosting under `/recoll` produces working routes, cookies, OpenAPI and document links, while
       untrusted forwarded-prefix headers are ignored (R29).
+- [ ] The service uses non-default state paths and listen settings without code changes, contains no
+      runtime Docker invocation, and recovers durable work after a cleanly handled shutdown (R31).
 - [ ] `uv run pytest`, `uv run ruff check .` and `uv run mypy src` pass, and the suite skips rather than
       fails with the container down.
 

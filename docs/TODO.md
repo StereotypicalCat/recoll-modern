@@ -60,6 +60,9 @@ Things a resuming agent will otherwise get wrong:
       brief, not an interview. Blocks spec 002.
 
 ## Someday
+- [ ] After delivery 004, write spec 005 for a cross-platform installable desktop distribution. Start
+      from a Tauri-style shell that reuses the web UI and bundles the API and Recoll as sidecars; decide
+      the actual framework, licensing, signing, updates and per-platform filter coverage in that spec.
 - [ ] Propose a CI check (Gitea Actions): assert `AGENTS.md`, `CLAUDE.md`, `GEMINI.md` and the `docs/`
       paths exist, and fail if `AGENTS.md` exceeds 150 lines.
 
