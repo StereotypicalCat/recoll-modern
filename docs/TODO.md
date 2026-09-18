@@ -13,12 +13,11 @@ Where the workflow stands (`AGENTS.md` -> Workflow: brainstorm -> spec -> plan -
   reasoning in `docs/DECISIONS.md`.
 - Spec `docs/specs/001-search-engine-api.md`: **approved 2026-09-18.** It includes directory rules,
   selectable search fields, subpath hosting and the packaging seam for deferred desktop spec 005.
-- Plan `docs/plans/001-search-engine-api.md`: **written, status draft.** It needs maintainer sign-off
-  before implementation. Plan approval also approves the listed Python runtime and development
-  dependencies; do not scaffold or add them before that approval.
+- Plan `docs/plans/001-search-engine-api.md`: **approved 2026-09-18.** Its listed Python runtime and
+  development dependencies are approved. Execution uses the subagent-driven workflow.
 
-The next action is to ask the maintainer to review the plan and its dependency list. If they approve it,
-change its status to `approved`, commit that gate, and choose either subagent-driven or inline execution.
+The next action is Task 1 of the approved plan, using an isolated worktree and the subagent-driven
+workflow.
 
 Things a resuming agent will otherwise get wrong:
 
