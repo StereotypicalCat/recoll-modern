@@ -15,11 +15,12 @@ Where the workflow stands (`AGENTS.md` -> Workflow: brainstorm -> spec -> plan -
   selectable search fields, subpath hosting and the packaging seam for deferred desktop spec 005.
 - Plan `docs/plans/001-search-engine-api.md`: **approved 2026-09-18.** Its listed Python runtime and
   development dependencies are approved. Execution follows the plan task by task.
-- Plan Tasks 1–3 are complete and independently reviewed. Tasks 4–8 add discovery, content-hash
-  identity, additive membership, durable jobs, the atomic membership map, and the engine boundary.
-  Their checkboxes are current in the plan. The next task is authentication.
+- Plan Tasks 1–3 are complete and independently reviewed. Tasks 4–9 add discovery, content-hash
+  identity, additive membership, durable jobs, the atomic membership map, the engine boundary, and
+  session authentication. Their checkboxes are current in the plan. The next task is the HTTP shell.
 
-The next action is Task 9, "Implement users, sessions, seeding, and CSRF." Do not repeat Tasks 1–8.
+The next action is Task 10, "Build the FastAPI shell, middleware, and core resources." Do not repeat
+Tasks 1–9.
 
 Things a resuming agent will otherwise get wrong:
 

@@ -20,6 +20,7 @@ class Settings:
     trusted_proxies: tuple[ipaddress.IPv4Network | ipaddress.IPv6Network, ...]
     inline_text_limit: int
     inline_text_limit_max: int
+    session_lifetime_hours: int
 
     @property
     def database_path(self) -> Path:
@@ -43,6 +44,10 @@ class Settings:
         if not 0 < text_default <= text_max:
             raise ValueError("inline text limit must be positive and no greater than its maximum")
 
+        session_hours = int(environ.get("RECOLL_MODERN_SESSION_HOURS", "12"))
+        if session_hours <= 0:
+            raise ValueError("session lifetime must be positive")
+
         proxy_text = environ.get("RECOLL_MODERN_TRUSTED_PROXIES", "")
         proxies = tuple(
             ipaddress.ip_network(value.strip(), strict=False)
@@ -64,4 +69,5 @@ class Settings:
             trusted_proxies=proxies,
             inline_text_limit=text_default,
             inline_text_limit_max=text_max,
+            session_lifetime_hours=session_hours,
         )

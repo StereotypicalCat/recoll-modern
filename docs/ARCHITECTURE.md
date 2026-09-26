@@ -5,8 +5,8 @@ How `recoll-modern` is built today. Update in the same commit as any structural 
 ## Overview
 
 The Python service scaffold, SQLite schema, collection and membership repositories, document
-discovery/identity modules, durable job worker, and engine adapter are built. The HTTP API remains
-intended structure. Recoll behaviour below was verified against a real container.
+discovery/identity modules, durable job worker, engine adapter, and authentication service are built.
+The HTTP API remains intended structure. Recoll behaviour below was verified against a real container.
 
 The goal: a self-hosted service that wraps Recoll's indexing and full-text search behind (a) a modern
 web UI and (b) an MCP server, running in Docker, with several independent collections such as
@@ -29,6 +29,7 @@ web UI and (b) an MCP server, running in Docker, with several independent collec
 | `src/recoll_modern/indexing/map_export.py` | Writes a durable atomic map from canonical paths to opaque collection IDs |
 | `helper/` | C reader run by Recoll's `metadatacmds` for each indexed file |
 | `src/recoll_modern/engine/` | Shared Protocol, deterministic fake, and isolated Recoll Python/indexer adapter |
+| `src/recoll_modern/domain/auth.py`, `storage/auth.py` | Argon2 password checks, seeded administrator, hashed server-side sessions and CSRF verification |
 | `tests/` | Automated service tests |
 
 Discovery produces content hashes and root-relative paths without writing to the document volume.
@@ -89,8 +90,8 @@ is direct membership union non-excluded rule membership, so direct additions rem
 
 `jobs` and `job_file_errors` make work and partial failures durable. At startup, the worker requeues
 well-formed interrupted jobs, clears errors from the prior attempt, and fails unreadable requests.
-`users` and hashed-token `sessions`
-provide authentication. `schema_migrations` is forward-only. The exact columns and constraints are the
+`users` and hashed-token `sessions` provide authentication; the session lifetime is configurable and
+defaults to 12 hours. `schema_migrations` is forward-only. The exact columns and constraints are the
 contract in `docs/specs/001-search-engine-api.md`.
 
 ### HTTP boundary

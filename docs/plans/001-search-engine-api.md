@@ -665,7 +665,7 @@ git commit -m "feat: add Recoll engine boundary"
 - Produces: `AuthService.login/authenticate/logout/seed_initial_admin`
 - Produces: `SessionCredentials(cookie_token, csrf_token, expires_at)`
 
-- [ ] **Step 1: Write failing auth tests**
+- [x] **Step 1: Write failing auth tests**
 
 ```python
 def test_passwords_are_argon2_hashes(auth: AuthService) -> None:
@@ -687,15 +687,15 @@ def test_first_boot_without_credentials_refuses_startup(empty_auth: AuthService)
 
 Also test disabled/expired sessions, generic invalid credentials, case-folded usernames, CSRF mismatch, and cleanup.
 
-- [ ] **Step 2: Run tests and observe failure**
+- [x] **Step 2: Run tests and observe failure**
 
 Run: `uv run pytest tests/domain/test_auth.py tests/storage/test_auth_repository.py -v`
 
-- [ ] **Step 3: Implement auth services**
+- [x] **Step 3: Implement auth services**
 
 Use `argon2.PasswordHasher` defaults, `secrets.token_urlsafe(32)` for independent cookie/CSRF tokens, and SHA-256 digests for stored lookup values. Session lifetime is configurable, defaults to 12 hours, and sliding refresh updates `last_seen_at` without extending beyond the configured policy. Use `hmac.compare_digest` for CSRF hashes. Seed `RECOLL_MODERN_ADMIN_USERNAME` and `RECOLL_MODERN_ADMIN_PASSWORD` only when no user exists; erase local password references after hashing and never log them.
 
-- [ ] **Step 4: Verify and commit**
+- [x] **Step 4: Verify and commit**
 
 Run: `uv run pytest tests/domain/test_auth.py tests/storage/test_auth_repository.py -v && uv run ruff check . && uv run mypy src tests`
 

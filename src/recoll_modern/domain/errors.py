@@ -12,3 +12,6 @@ class AppError(Exception):
     message: str
     status: int
     details: Mapping[str, object] = field(default_factory=dict)
+
+    def __str__(self) -> str:
+        return self.message

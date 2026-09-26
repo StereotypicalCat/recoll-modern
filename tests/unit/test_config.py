@@ -24,3 +24,10 @@ def test_settings_are_rooted_in_configured_state(tmp_path: Path) -> None:
 def test_root_path_rejects_trailing_slash() -> None:
     with pytest.raises(ValueError, match="mount prefix"):
         Settings.from_env({"RECOLL_MODERN_ROOT_PATH": "/recoll/"})
+
+
+def test_session_lifetime_is_configurable() -> None:
+    settings = Settings.from_env({"RECOLL_MODERN_SESSION_HOURS": "6"})
+    assert settings.session_lifetime_hours == 6
+    with pytest.raises(ValueError, match="session lifetime"):
+        Settings.from_env({"RECOLL_MODERN_SESSION_HOURS": "0"})
