@@ -478,7 +478,7 @@ git commit -m "feat: add membership provenance and rules"
 - Produces: `JobWorker.start()`, `JobWorker.stop()`, `JobWorker.run_once() -> bool`
 - Produces: `MembershipJobHandler.handle(job: Job) -> None`
 
-- [ ] **Step 1: Write failing transition, recovery, and policy tests**
+- [x] **Step 1: Write failing transition, recovery, and policy tests**
 
 ```python
 def test_recover_running_requeues_valid_jobs(repo: JobRepository) -> None:
@@ -498,17 +498,17 @@ def test_best_effort_applies_valid_files_and_records_errors(handler: MembershipJ
     assert jobs.current.state == JobState.COMPLETED_WITH_ERRORS
 ```
 
-- [ ] **Step 2: Run tests and observe failure**
+- [x] **Step 2: Run tests and observe failure**
 
 Run: `uv run pytest tests/storage/test_job_repository.py tests/indexing/test_worker.py tests/indexing/test_job_handlers.py -v`
 
-- [ ] **Step 3: Implement durable transitions and handlers**
+- [x] **Step 3: Implement durable transitions and handlers**
 
 Use opaque `j` plus 32 hex digits. `claim_next` runs under `BEGIN IMMEDIATE`, selects the oldest queued job, and changes it to running atomically. Valid transitions are queued→running, running→completed/completed_with_errors/failed, and failed→queued via retry. Startup requeues running jobs whose JSON decodes to the registered request type; malformed requests become failed with `invalid_job_request`.
 
 The worker owns one asyncio task, sleeps on an `asyncio.Event`, performs blocking discovery/database/engine work with `asyncio.to_thread`, and on shutdown stops claiming new work and leaves an interrupted running job recoverable. Membership handlers scan completely before opening the desired-state transaction in strict mode. Best-effort handlers persist every safe file error and continue.
 
-- [ ] **Step 4: Verify and commit**
+- [x] **Step 4: Verify and commit**
 
 Run: `uv run pytest tests/storage/test_job_repository.py tests/indexing/test_worker.py tests/indexing/test_job_handlers.py -v && uv run ruff check . && uv run mypy src tests`
 

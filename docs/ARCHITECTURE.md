@@ -4,9 +4,9 @@ How `recoll-modern` is built today. Update in the same commit as any structural 
 
 ## Overview
 
-The Python service scaffold, SQLite schema, collection and membership repositories, and document
-discovery/identity modules are built. The API, job queue, and Recoll adapter remain intended structure.
-Recoll behaviour below was verified against a real container.
+The Python service scaffold, SQLite schema, collection and membership repositories, document
+discovery/identity modules, and durable job worker are built. The API and Recoll adapter remain
+intended structure. Recoll behaviour below was verified against a real container.
 
 The goal: a self-hosted service that wraps Recoll's indexing and full-text search behind (a) a modern
 web UI and (b) an MCP server, running in Docker, with several independent collections such as
@@ -24,6 +24,8 @@ web UI and (b) an MCP server, running in Docker, with several independent collec
 | `src/recoll_modern/storage/` | SQLite migrations, collection metadata and content-hash identity |
 | `src/recoll_modern/domain/membership.py` | Validates sources and applies direct additions and rule changes |
 | `src/recoll_modern/indexing/reconcile.py` | Refreshes persistent directory rules while retaining excluded or unreadable files as present |
+| `src/recoll_modern/indexing/worker.py` | Claims one durable job at a time and runs blocking handlers off the event loop |
+| `src/recoll_modern/indexing/handlers.py` | Scans membership sources before strict-mode mutations and records file errors |
 | `tests/` | Automated service tests |
 
 Discovery produces content hashes and root-relative paths without writing to the document volume.
@@ -80,7 +82,9 @@ is normalized: `direct_memberships` holds explicit files and snapshot expansions
 `membership_exclusions` holds per-file overrides against rule-derived membership. Effective membership
 is direct membership union non-excluded rule membership, so direct additions remain additive.
 
-`jobs` and `job_file_errors` make work and partial failures durable. `users` and hashed-token `sessions`
+`jobs` and `job_file_errors` make work and partial failures durable. At startup, the worker requeues
+well-formed interrupted jobs, clears errors from the prior attempt, and fails unreadable requests.
+`users` and hashed-token `sessions`
 provide authentication. `schema_migrations` is forward-only. The exact columns and constraints are the
 contract in `docs/specs/001-search-engine-api.md`.
 

@@ -27,7 +27,16 @@ class MembershipService:
         self._memberships = memberships
 
     def plan_add(self, collection_id: str, sources: list[Source]) -> MembershipPlanResult:
-        for source in sources:
+        discovered = [(source, discover_sources(self._policy, [source])) for source in sources]
+        return self.apply_discovered(collection_id, discovered)
+
+    def apply_discovered(
+        self,
+        collection_id: str,
+        discovered: list[tuple[Source, DiscoveryReport]],
+    ) -> MembershipPlanResult:
+        """Apply already scanned sources so strict jobs never rescan after validation."""
+        for source, _ in discovered:
             if source.type == "directory":
                 parent = self._policy.normalize(source.path)
                 if any(
@@ -35,7 +44,6 @@ class MembershipService:
                     for path in source.excluded_directories
                 ):
                     raise ValueError("excluded directory must be a descendant")
-        discovered = [(source, discover_sources(self._policy, [source])) for source in sources]
         files = list({
             file.relative_path: file
             for _, report in discovered

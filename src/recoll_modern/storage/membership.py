@@ -138,6 +138,16 @@ class MembershipRepository:
                 (collection_id, content_hash),
             ).fetchone() is not None
 
+    def direct_documents(self, collection_id: str) -> set[str]:
+        with self._database.connect() as connection:
+            return {
+                str(row[0])
+                for row in connection.execute(
+                    "SELECT document_hash FROM direct_memberships WHERE collection_id = ?",
+                    (collection_id,),
+                )
+            }
+
     def exclude_document(self, collection_id: str, content_hash: str) -> None:
         with self._database.transaction() as connection:
             connection.execute(
