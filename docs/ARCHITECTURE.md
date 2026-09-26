@@ -4,9 +4,9 @@ How `recoll-modern` is built today. Update in the same commit as any structural 
 
 ## Overview
 
-**Nothing is built yet.** This file records intent, the design questions that are now closed, and the
-Recoll behaviour verified against a real container. Do not read "Intended shape" as describing existing
-code.
+The Python service scaffold, SQLite schema, collection repository, and document discovery/identity
+modules are built. The API, job queue, and Recoll adapter remain intended structure. Recoll behaviour
+below was verified against a real container.
 
 The goal: a self-hosted service that wraps Recoll's indexing and full-text search behind (a) a modern
 web UI and (b) an MCP server, running in Docker, with several independent collections such as
@@ -20,9 +20,13 @@ web UI and (b) an MCP server, running in Docker, with several independent collec
 | `PRODUCT.md` | Durable product context for the `impeccable` skill |
 | `docs/specs/`, `docs/plans/` | Approved specs and implementation plans |
 | `src/recoll_modern/` | Python service package; configuration, application factory and CLI boundary |
+| `src/recoll_modern/indexing/` | Root-relative path policy, read-only discovery, stable file hashing |
+| `src/recoll_modern/storage/` | SQLite migrations, collection metadata and content-hash identity |
 | `tests/` | Automated service tests |
 
-The initial service scaffold is present; add rows here as its modules appear.
+Discovery produces content hashes and root-relative paths without writing to the document volume.
+The document repository records these in one transaction, chooses the smallest live path as canonical,
+and marks paths missing only when a caller explicitly reconciles them.
 
 ## Delivery order
 

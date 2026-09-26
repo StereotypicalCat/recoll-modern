@@ -354,7 +354,7 @@ git commit -m "feat: add collection domain"
 - Produces: `discover_sources(policy, sources) -> DiscoveryReport`
 - Produces: `DocumentRepository.observe_files(files) -> ObservationResult`
 
-- [ ] **Step 1: Write failing filesystem-policy tests**
+- [x] **Step 1: Write failing filesystem-policy tests**
 
 ```python
 def test_directory_symlink_is_not_walked(tree: DocumentTree) -> None:
@@ -373,11 +373,11 @@ def test_same_bytes_have_one_document_and_one_canonical_path(repository: Documen
 
 Also cover exact recursive directory exclusions, a file vanishing between stat and read, unreadable files, and same-name/different-content files.
 
-- [ ] **Step 2: Run tests and observe failure**
+- [x] **Step 2: Run tests and observe failure**
 
 Run: `uv run pytest tests/indexing/test_paths.py tests/indexing/test_discovery.py tests/storage/test_documents.py -v`
 
-- [ ] **Step 3: Implement secure discovery and stable hashing**
+- [x] **Step 3: Implement secure discovery and stable hashing**
 
 `PathPolicy` rejects absolute paths, `..`, NUL, and resolved targets outside `document_root`. Directory
 traversal uses `os.scandir(directory_path)` and calls `entry.is_dir(follow_symlinks=False)`, sorts entries
@@ -388,7 +388,7 @@ before traversal. File symlinks are dereferenced only after containment validati
 
 `observe_files` upserts documents and paths in one transaction, chooses the lexicographically smallest live normalized path as canonical, clears all previous canonical flags before setting the new one, marks unseen known paths missing only during full/rule reconciliation, and marks a document missing only when it has no live paths.
 
-- [ ] **Step 4: Verify and commit**
+- [x] **Step 4: Verify and commit**
 
 Run: `uv run pytest tests/indexing tests/storage/test_documents.py -v && uv run ruff check . && uv run mypy src tests`
 

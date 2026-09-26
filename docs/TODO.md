@@ -14,13 +14,13 @@ Where the workflow stands (`AGENTS.md` -> Workflow: brainstorm -> spec -> plan -
 - Spec `docs/specs/001-search-engine-api.md`: **approved 2026-09-18.** It includes directory rules,
   selectable search fields, subpath hosting and the packaging seam for deferred desktop spec 005.
 - Plan `docs/plans/001-search-engine-api.md`: **approved 2026-09-18.** Its listed Python runtime and
-  development dependencies are approved. Execution uses the subagent-driven workflow.
-- Plan Tasks 1–3 are complete and independently reviewed: Python/FastAPI scaffold and configuration,
-  SQLite schema/migrations, and collection identity/repository CRUD. Their checkboxes are current in the
-  plan. At the checkpoint, `uv sync --locked`, all 27 tests, Ruff, mypy and `uv build` passed.
+  development dependencies are approved. Execution follows the plan task by task.
+- Plan Tasks 1–3 are complete and independently reviewed. Task 4 adds read-only discovery, stable
+  hashing and content-hash identity; its checkboxes are current in the plan. The next task is additive
+  membership and directory rules.
 
-The next action is Task 4, "Discover files and maintain content-hash identity," using the
-subagent-driven workflow. Do not repeat Tasks 1–3.
+The next action is Task 5, "Implement additive membership and directory rules." Do not repeat
+Tasks 1–4.
 
 Things a resuming agent will otherwise get wrong:
 
