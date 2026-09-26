@@ -123,7 +123,9 @@ def test_extracted_text_uses_exact_path_udi(
     )
     monkeypatch.setitem(sys.modules, "recoll", recoll_package)
     db = SimpleNamespace(
-        getDoc=lambda udi: SimpleNamespace(ipath="") if udi == "udi" else None,
+        getDoc=lambda udi: SimpleNamespace(
+            ipath="", getbinurl=lambda: path.encode()
+        ) if udi == "udi" else None,
         close=lambda: None,
     )
     monkeypatch.setattr(RecollEngine, "_connect", lambda self: db)

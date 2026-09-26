@@ -8,6 +8,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from recoll_modern.domain.search import valid_query
 from recoll_modern.engine.protocol import (
     EngineHealth,
     EngineHit,
@@ -46,7 +47,7 @@ class RecollEngine:
         return EngineHealth(True)
 
     def search(self, request: SearchRequest) -> EnginePage:
-        if not _safe_query(request.query):
+        if not valid_query(request.query):
             raise ValueError("query syntax cannot escape collection scope")
         if not request.collection_ids or any(
             _COLLECTION_ID.fullmatch(collection_id) is None
@@ -86,7 +87,7 @@ class RecollEngine:
             db = self._connect()
             try:
                 doc = db.getDoc(fsudi.fs_udi(path))
-                if doc is None:
+                if doc is None or not doc.getbinurl():
                     return ""
                 extracted = rclextract.Extractor(doc).textextract(doc.ipath)
                 return str(extracted.text)
@@ -143,21 +144,3 @@ def _hit(doc: Any, query: Any, fetch_text: bool, rank: int) -> EngineHit:
         snippets=snippets,
         text=str(getattr(doc, "text", "")) if fetch_text else None,
     )
-
-
-def _safe_query(query: str) -> bool:
-    """Keep user grouping inside the enclosing scope expression."""
-    if not query.strip() or "\\" in query:
-        return False
-    depth = 0
-    quoted = False
-    for character in query:
-        if character == '"':
-            quoted = not quoted
-        elif not quoted and character == "(":
-            depth += 1
-        elif not quoted and character == ")":
-            depth -= 1
-            if depth < 0:
-                return False
-    return depth == 0 and not quoted

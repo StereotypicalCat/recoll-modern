@@ -316,3 +316,15 @@ replacement); run the service as root.
 **Consequences:** service-state backups include generated Recoll configuration, and config changes made
 by an operator persist across image upgrades. Template updates require an explicit migration if an
 existing config should adopt them.
+
+---
+
+## 2026-09-26 — Treat an empty Recoll document URL as a missing hit
+**Status:** accepted
+**Context:** the live Recoll 1.43 Python binding returns a `Doc` object with an empty `getbinurl()` for
+a UDI absent from the index; it does not return `None`. Passing that object to `rclextract.Extractor`
+raises an internal-file error.
+**Decision:** check the returned URL before extraction and return empty text for an absent UDI.
+**Alternatives:** catch the generic extraction error, which would hide genuine extraction failures.
+**Consequences:** exact-path text lookup follows the engine contract for missing documents while real
+extraction failures still surface as `engine_unavailable`.

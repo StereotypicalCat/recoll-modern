@@ -980,11 +980,11 @@ git commit -m "feat: package Recoll service"
 - Consumes: all prior tasks
 - Produces: executable evidence for every spec acceptance criterion
 
-- [ ] **Step 1: Add a requirement-to-test matrix**
+- [x] **Step 1: Add a requirement-to-test matrix**
 
 At the top of `test_http_contract.py`, map `R1` through `R31` and `C1` through `C4` to named tests. Write missing tests before changing implementation. The end-to-end flow must: login under `/recoll`; create two collections; add explicit, snapshot, and persistent sources; exclude `.calibre`; index duplicate/same-name fixtures; search one and several collections; request projected fields and bounded text; fetch full text and a byte range; reconcile a moved/deleted canonical path; restart during a running job; and verify recovery.
 
-- [ ] **Step 2: Prove each new test fails for its intended reason**
+- [x] **Step 2: Prove each new test fails for its intended reason**
 
 Run each new node individually, for example:
 
@@ -995,11 +995,11 @@ uv run pytest tests/security/test_proxy_headers.py::test_direct_client_cannot_fo
 
 Expected: each new test fails on the missing/incorrect behavior, not fixture setup.
 
-- [ ] **Step 3: Apply minimal fixes and rerun focused tests**
+- [x] **Step 3: Apply minimal fixes and rerun focused tests**
 
 For every failure, change only the responsible module, rerun the single red test to green, then its containing test file. Append deferred discoveries to `docs/TODO.md`; do not leave source TODO comments.
 
-- [ ] **Step 4: Run the complete verification matrix**
+- [x] **Step 4: Run the complete verification matrix**
 
 Run in this order:
 
@@ -1020,7 +1020,7 @@ git status --short
 
 Expected: every command exits 0; host suite reports explicit skips only for Recoll-dependent tests when the container is down; required-container suite has no such skips; Git status contains only the intended final documentation/checkbox changes before the commit.
 
-- [ ] **Step 5: Complete docs and commit**
+- [x] **Step 5: Complete docs and commit**
 
 Check every acceptance box in the spec only when its named test passed in this session. Update the
 architecture map/data flow, append decisions that an implementer actually made, remove completed TODO

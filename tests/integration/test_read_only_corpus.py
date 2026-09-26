@@ -58,3 +58,35 @@ def test_generated_corpus_indexes_and_searches(
         )
         assert result.status_code == 200, result.text
         assert result.json()["hits"], result.json()
+        document_id = result.json()["hits"][0]["document_id"]
+        second = client.post(
+            "/collections", json={"name": f"Integration second {time.time_ns()}"},
+            headers=headers,
+        )
+        assert second.status_code == 201, second.text
+        second_id = second.json()["id"]
+        second_job = client.post(
+            f"/collections/{second_id}/memberships", headers=headers,
+            json={"sources": [{"type": "file", "path": corpus_file}]},
+        )
+        assert second_job.status_code == 202, second_job.text
+        second_job_id = second_job.json()["job"]["id"]
+        deadline = time.monotonic() + 30
+        while time.monotonic() < deadline:
+            job = client.get(f"/jobs/{second_job_id}", headers=headers).json()["job"]
+            if job["state"] not in ("queued", "running"):
+                break
+            time.sleep(0.1)
+        assert job["state"] == "completed", job
+        combined = client.get(
+            "/search", params=[
+                ("q", "zebraplatypus"), ("collections", collection_id),
+                ("collections", second_id), ("fields", "collections"),
+            ], headers=headers,
+        )
+        assert combined.status_code == 200, combined.text
+        assert len(combined.json()["hits"]) == 1
+        assert set(combined.json()["hits"][0]["collections"]) >= {collection_id, second_id}
+        extracted = client.get(f"/documents/{document_id}/text", headers=headers)
+        assert extracted.status_code == 200, extracted.text
+        assert "zebraplatypus" in extracted.json()["text"]

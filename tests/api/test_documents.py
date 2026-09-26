@@ -46,7 +46,7 @@ def test_unknown_and_missing_documents(
     digest = _document(client, tmp_path)
     (tmp_path / "docs" / 'quoted"name.txt').unlink()
     response = client.get(f"/documents/{digest}/file")
-    assert response.status_code == 404
+    assert response.status_code == 410
     assert response.json()["error"]["code"] == "document_missing"
 
 

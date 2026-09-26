@@ -16,6 +16,24 @@ ALLOWED_FIELDS = frozenset({
 DEFAULT_FIELDS = ALLOWED_FIELDS - {"text", "links"}
 
 
+def valid_query(query: str) -> bool:
+    """Keep user grouping entirely inside the engine's mandatory scope clause."""
+    if not query.strip() or "\\" in query:
+        return False
+    depth = 0
+    quoted = False
+    for character in query:
+        if character == '"':
+            quoted = not quoted
+        elif not quoted and character == "(":
+            depth += 1
+        elif not quoted and character == ")":
+            depth -= 1
+            if depth < 0:
+                return False
+    return depth == 0 and not quoted
+
+
 @dataclass(frozen=True, slots=True)
 class SearchInput:
     query: str
@@ -45,12 +63,12 @@ class SearchService:
         self._text_limit_max = text_limit_max
 
     def search(self, search: SearchInput) -> SearchResult:
-        if not search.query.strip():
+        if not valid_query(search.query):
             raise AppError("invalid_query", "Query must not be empty", 400)
         if not search.collection_ids:
             raise AppError("scope_required", "At least one collection is required", 400)
         if search.fields is not None and set(search.fields) - ALLOWED_FIELDS:
-            raise AppError("invalid_query", "Unknown search field", 400)
+            raise AppError("invalid_field", "Unknown search field", 422)
         if not 1 <= search.limit <= 100 or search.offset < 0 or search.text_limit < 0:
             raise AppError("validation_failed", "Invalid search bounds", 422)
         fields = DEFAULT_FIELDS if search.fields is None else set(search.fields)
@@ -61,6 +79,8 @@ class SearchService:
             ))
         except EngineUnavailable:
             raise AppError("engine_unavailable", "Search engine is unavailable", 503) from None
+        except ValueError:
+            raise AppError("invalid_query", "Query is invalid", 400) from None
         results: list[dict[str, object]] = []
         for hit in page.hits:
             try:

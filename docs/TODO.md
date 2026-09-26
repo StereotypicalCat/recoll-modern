@@ -15,14 +15,13 @@ Where the workflow stands (`AGENTS.md` -> Workflow: brainstorm -> spec -> plan -
   selectable search fields, subpath hosting and the packaging seam for deferred desktop spec 005.
 - Plan `docs/plans/001-search-engine-api.md`: **approved 2026-09-18.** Its listed Python runtime and
   development dependencies are approved. Execution follows the plan task by task.
-- Plan Tasks 1–3 are complete and independently reviewed. Tasks 4–13 add discovery, content-hash
+- Plan Tasks 1–3 are complete and independently reviewed. Tasks 4–14 add discovery, content-hash
   identity, additive membership, durable jobs, the atomic membership map, the engine boundary,
   session authentication, the HTTP shell, membership/rule/job routes, scoped search and document
-  retrieval and Docker packaging. Their checkboxes are current in the plan. The next task is final
-  contract, recovery, security and acceptance coverage.
+  retrieval, Docker packaging and acceptance coverage. Their checkboxes are current in the plan.
+  Final code review and branch handoff remain.
 
-The next action is Task 14, "Complete contract, recovery, security, and acceptance coverage." Do not
-repeat Tasks 1–13.
+The next action is Task 14 Step 6, "Request review before integration." Do not repeat Tasks 1–14.
 
 Things a resuming agent will otherwise get wrong:
 
@@ -56,7 +55,7 @@ Things a resuming agent will otherwise get wrong:
       once per file per index run.
 - [ ] Re-measure indexing overhead against real documents (PDF, EPUB) rather than small text files —
       extraction cost should dwarf the helper, but that is an assumption until measured.
-- [ ] Promote a new canonical path and force a reindex when a canonical path disappears, or the
+- [x] Promote a new canonical path and force a reindex when a canonical path disappears, or the
       document silently leaves every collection it is in.
 - [x] Recover interrupted indexing jobs at startup; Task 6 requeues valid running jobs and fails
       unreadable requests.

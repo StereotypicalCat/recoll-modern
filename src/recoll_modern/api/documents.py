@@ -23,11 +23,11 @@ def _path(request: Request, document_hash: str) -> Path:
     if document is None:
         raise AppError("document_not_found", "Document was not found", 404)
     if document.canonical_path is None:
-        raise AppError("document_missing", "Document is missing", 404)
+        raise AppError("document_missing", "Document is missing", 410)
     root = request.app.state.path_policy.root
     path = (root / document.canonical_path).resolve()
     if not path.is_relative_to(root) or not path.is_file():
-        raise AppError("document_missing", "Document is missing", 404)
+        raise AppError("document_missing", "Document is missing", 410)
     return cast(Path, path)
 
 

@@ -60,8 +60,8 @@ def test_search_validates_fields_collections_and_pagination(
     for params, status, code in [
         ({"q": " ", "collections": collection_id}, 400, "invalid_query"),
         ({"q": "a", "collections": "c0000000000"}, 404, "collection_not_found"),
-        ({"q": "a", "collections": collection_id, "fields": "bad"}, 400,
-         "invalid_query"),
+        ({"q": "a", "collections": collection_id, "fields": "bad"}, 422,
+         "invalid_field"),
         ({"q": "a", "collections": collection_id, "limit": 101}, 422,
          "validation_failed"),
     ]:

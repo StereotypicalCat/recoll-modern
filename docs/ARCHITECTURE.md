@@ -7,7 +7,7 @@ How `recoll-modern` is built today. Update in the same commit as any structural 
 The Python service scaffold, SQLite schema, collection and membership repositories, document
 discovery/identity modules, durable job worker, engine adapter, authentication service, and initial
 HTTP shell, membership routes, job routes, scoped search, document retrieval, and Docker packaging are
-built. Final contract, recovery and security acceptance coverage remains. Recoll behaviour
+built and covered by host and container acceptance tests. Recoll behaviour
 below was verified against a real container.
 
 The goal: a self-hosted service that wraps Recoll's indexing and full-text search behind (a) a modern
@@ -36,6 +36,7 @@ web UI and (b) an MCP server, running in Docker, with several independent collec
 | `src/recoll_modern/api/` | HTTP auth, health, file browsing, collection/membership/rule/job resources, search, document retrieval, prefix/proxy handling and JSON errors |
 | `src/recoll_modern/domain/search.py` | Validates explicit scope and fields, projects current SQLite identities and membership onto engine-ranked hits |
 | `tests/` | Automated service tests |
+| `tests/contract/`, `tests/integration/`, `tests/security/` | Requirement matrix, real-container Recoll contract, lifecycle, and boundary checks |
 
 Discovery produces content hashes and root-relative paths without writing to the document volume.
 The document repository records these in one transaction, chooses the smallest live path as canonical,
@@ -122,6 +123,12 @@ helper. The non-root process copies Recoll config templates into the persistent 
 absent; Recoll may generate additional support files there. Compose mounts documents read-only and
 keeps the SQLite/config and Xapian index volumes separate. Initial health can be 503 until an indexing
 job creates the first index.
+
+The host Recoll contract tests skip when no container is running. Required-container mode executes the
+adapter inside Compose, avoiding a host Recoll dependency; the generated-corpus test proves that a
+read-only file can be indexed, searched in two collections, and retrieved as extracted text. The HTTP
+lifecycle test uses a deterministic engine to exercise rules, identity, projection, canonical-path
+promotion and interrupted-job recovery.
 
 The resource groups are auth, health, read-only file browsing, collections and membership sources,
 directory rules, scoped search, document text/original retrieval, and indexing jobs. Search callers

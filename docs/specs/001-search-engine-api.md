@@ -284,36 +284,36 @@ exists. Unexpected errors return a request ID rather than exception text or file
 
 ## Acceptance criteria
 
-- [ ] A collection can be created, renamed and deleted over the API; renaming enqueues no job (R1–R4).
-- [ ] Deleting without a matching confirmation value is refused, and no index is deleted or rebuilt (R4).
-- [ ] Two files in the same directory can belong to different collections, and each is found only by its
+- [x] A collection can be created, renamed and deleted over the API; renaming enqueues no job (R1–R4).
+- [x] Deleting without a matching confirmation value is refused, and no index is deleted or rebuilt (R4).
+- [x] Two files in the same directory can belong to different collections, and each is found only by its
       own collection's scope (C2, R6).
-- [ ] Two byte-identical files under different names are one document and appear once in a scoped
+- [x] Two byte-identical files under different names are one document and appear once in a scoped
       search (C3, R5, R7).
-- [ ] Two files sharing a name with different content are two documents and both are findable (C3).
-- [ ] Removing a canonical path promotes another path and the document remains findable (R8).
-- [ ] Snapshot directories add their current documents once; persistent directories reconcile at
+- [x] Two files sharing a name with different content are two documents and both are findable (C3).
+- [x] Removing a canonical path promotes another path and the document remains findable (R8).
+- [x] Snapshot directories add their current documents once; persistent directories reconcile at
       startup and on reindex, honoring scoped exact-directory exclusions (R10–R12).
-- [ ] A direct file addition remains a member despite a rule exclusion, and removing a rule never
+- [x] A direct file addition remains a member despite a rule exclusion, and removing a rule never
       removes membership contributed by another source (R11).
-- [ ] A strict job applies no membership changes after any discovery failure; the same best-effort job
+- [x] A strict job applies no membership changes after any discovery failure; the same best-effort job
       applies valid files and reports `completed_with_errors` (R18).
-- [ ] A search without `collections` is rejected with `scope_required` (C4, R19).
-- [ ] A search across two collections returns one ranked set, with each hit reporting its collections
+- [x] A search without `collections` is rejected with `scope_required` (C4, R19).
+- [x] A search across two collections returns one ranked set, with each hit reporting its collections
       (R20, R21).
-- [ ] Search field selection omits unrequested data; inline text is bounded and full authenticated text
+- [x] Search field selection omits unrequested data; inline text is bounded and full authenticated text
       and ranged original-file retrieval work (R21–R22).
-- [ ] A membership change is visible to search after its job completes, without the document being
+- [x] A membership change is visible to search after its job completes, without the document being
       written to (C1, R13, R14).
-- [ ] Indexing a document volume mounted `:ro` succeeds (C1).
-- [ ] A job interrupted by a restart is not left claiming to be in progress (R17).
-- [ ] An unauthenticated request to any endpoint except `/health` and `/auth/login` is refused (R24).
-- [ ] The service refuses to start with no user and no seeded credentials (R26).
-- [ ] Hosting under `/recoll` produces working routes, cookies, OpenAPI and document links, while
+- [x] Indexing a document volume mounted `:ro` succeeds (C1).
+- [x] A job interrupted by a restart is not left claiming to be in progress (R17).
+- [x] An unauthenticated request to any endpoint except `/health` and `/auth/login` is refused (R24).
+- [x] The service refuses to start with no user and no seeded credentials (R26).
+- [x] Hosting under `/recoll` produces working routes, cookies, OpenAPI and document links, while
       untrusted forwarded-prefix headers are ignored (R29).
-- [ ] The service uses non-default state paths and listen settings without code changes, contains no
+- [x] The service uses non-default state paths and listen settings without code changes, contains no
       runtime Docker invocation, and recovers durable work after a cleanly handled shutdown (R31).
-- [ ] `uv run pytest`, `uv run ruff check .` and `uv run mypy src` pass, and the suite skips rather than
+- [x] `uv run pytest`, `uv run ruff check .` and `uv run mypy src` pass, and the suite skips rather than
       fails with the container down.
 
 ## Known gaps
