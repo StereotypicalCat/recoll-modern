@@ -581,7 +581,7 @@ git commit -m "feat: export Recoll membership metadata"
 - Produces: `SearchRequest`, `EngineHit`, `EnginePage`, `EngineHealth`
 - Produces: `Engine.health/search/extracted_text/force_reindex`
 
-- [ ] **Step 1: Write one contract suite against the fake**
+- [x] **Step 1: Write one contract suite against the fake**
 
 ```python
 class EngineContract:
@@ -600,11 +600,11 @@ class EngineContract:
 
 Cover metadata, snippets, optional text, offset, total estimate, health, missing text, and forced paths. `test_fake_engine.py` subclasses the contract with deterministic fixtures.
 
-- [ ] **Step 2: Run fake contract and observe failure**
+- [x] **Step 2: Run fake contract and observe failure**
 
 Run: `uv run pytest tests/contract/test_fake_engine.py -v`
 
-- [ ] **Step 3: Implement Protocol and fake**
+- [x] **Step 3: Implement Protocol and fake**
 
 Define `Engine` as a `Protocol` with exact methods `health() -> EngineHealth`,
 `search(SearchRequest) -> EnginePage`, `extracted_text(str) -> str`, and
@@ -612,7 +612,7 @@ Define `Engine` as a `Protocol` with exact methods `health() -> EngineHealth`,
 
 The fake applies collection OR semantics, returns each document once, and logs force-reindex calls.
 
-- [ ] **Step 4: Implement the isolated Recoll adapter**
+- [x] **Step 4: Implement the isolated Recoll adapter**
 
 Import `from recoll import recoll` only inside this file. Connect with the configured Recoll config
 directory. Build `(<user query>) AND (collection:c0123456789 OR collection:cabcdef012)` using the actual
@@ -621,6 +621,11 @@ validated IDs. Call `query.execute(query_string, fetchtext=request.fetch_text)`,
 decode file URLs, and use `query.rowcount` as approximate total. Use a safely quoted path-scoped query
 with `fetchtext=True` for `extracted_text`; its contract test includes spaces, quotes, and parentheses in
 filenames.
+
+Implementation ruling: exact-path text retrieval uses Recoll's documented `fsudi.fs_udi(path)` plus
+`Db.getDoc()` and `rclextract`, which avoids query-language escaping for unusual filenames. The Python
+search API does not document a numeric relevance weight, so `score` currently derives from result rank;
+verify a native score when the real container contract runs.
 
 Run indexing as an argument list, never a shell string:
 
@@ -633,11 +638,11 @@ subprocess.run(
 
 Convert import, connection, timeout, and subprocess failures to `EngineUnavailable` without leaking stderr to clients.
 
-- [ ] **Step 5: Make the real contract skip only when unavailable**
+- [x] **Step 5: Make the real contract skip only when unavailable**
 
 `test_recoll_engine.py` probes the Compose service/config in a fixture. If unreachable it calls `pytest.skip("Recoll test container is not running")`; otherwise it runs the inherited contract. A separate assertion ensures the fixture did not return without either constructing an engine or recording a skip.
 
-- [ ] **Step 6: Verify and commit**
+- [x] **Step 6: Verify and commit**
 
 Run: `uv run pytest tests/contract -v && uv run ruff check . && uv run mypy src tests`
 

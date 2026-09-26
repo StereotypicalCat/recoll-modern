@@ -5,7 +5,7 @@ How `recoll-modern` is built today. Update in the same commit as any structural 
 ## Overview
 
 The Python service scaffold, SQLite schema, collection and membership repositories, document
-discovery/identity modules, and durable job worker are built. The API and Recoll adapter remain
+discovery/identity modules, durable job worker, and engine adapter are built. The HTTP API remains
 intended structure. Recoll behaviour below was verified against a real container.
 
 The goal: a self-hosted service that wraps Recoll's indexing and full-text search behind (a) a modern
@@ -28,6 +28,7 @@ web UI and (b) an MCP server, running in Docker, with several independent collec
 | `src/recoll_modern/indexing/handlers.py` | Scans membership sources before strict-mode mutations and records file errors |
 | `src/recoll_modern/indexing/map_export.py` | Writes a durable atomic map from canonical paths to opaque collection IDs |
 | `helper/` | C reader run by Recoll's `metadatacmds` for each indexed file |
+| `src/recoll_modern/engine/` | Shared Protocol, deterministic fake, and isolated Recoll Python/indexer adapter |
 | `tests/` | Automated service tests |
 
 Discovery produces content hashes and root-relative paths without writing to the document volume.

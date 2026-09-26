@@ -274,3 +274,18 @@ from the stated product intent; `DESIGN.md` could not — there is no UI, no tok
 **Alternatives:** a placeholder `DESIGN.md` — rejected, it would assert a visual system that does not
 exist and the skill would design against fiction.
 **Consequences:** the first UI task must end by writing `DESIGN.md`, not skip it.
+
+---
+
+## 2026-09-26 — Retrieve text by Recoll UDI and expose rank-based score
+**Status:** provisional until the real-container contract runs
+**Context:** the approved plan proposed an escaped path query for complete text and a relevance score.
+Recoll's Python API documents `fsudi.fs_udi(path)` and `Db.getDoc()` for exact path lookup, but does not
+document a numeric query weight on returned documents.
+**Decision:** derive the UDI from the canonical path for full-text extraction. Set `score` to the
+reciprocal result rank, preserving Recoll's order across pages while making no claim that the number
+is Xapian's raw weight.
+**Alternatives:** a query-language path clause that must safely encode quotes and parentheses; an
+undocumented Recoll binding attribute for score.
+**Consequences:** unusual filenames do not enter a query parser. Clients can compare score order within
+one query, but the value is a rank proxy. Revisit this once the real Recoll container can be tested.
