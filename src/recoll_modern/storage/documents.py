@@ -32,6 +32,19 @@ class DocumentRepository:
         with self._database.connect() as connection:
             return _record(connection, content_hash)
 
+    def known_paths_under(self, relative_directory: str) -> tuple[str, ...]:
+        """Return known live paths beneath a directory for explicit reconciliation."""
+        prefix = relative_directory + "/"
+        with self._database.connect() as connection:
+            return tuple(
+                str(row[0])
+                for row in connection.execute(
+                    "SELECT relative_path FROM document_paths WHERE missing_at IS NULL "
+                    "ORDER BY relative_path"
+                )
+                if str(row[0]).startswith(prefix)
+            )
+
     def observe_files(
         self,
         files: list[ObservedFile],

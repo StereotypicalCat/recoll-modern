@@ -15,12 +15,11 @@ Where the workflow stands (`AGENTS.md` -> Workflow: brainstorm -> spec -> plan -
   selectable search fields, subpath hosting and the packaging seam for deferred desktop spec 005.
 - Plan `docs/plans/001-search-engine-api.md`: **approved 2026-09-18.** Its listed Python runtime and
   development dependencies are approved. Execution follows the plan task by task.
-- Plan Tasks 1–3 are complete and independently reviewed. Task 4 adds read-only discovery, stable
-  hashing and content-hash identity; its checkboxes are current in the plan. The next task is additive
-  membership and directory rules.
+- Plan Tasks 1–3 are complete and independently reviewed. Tasks 4–5 add read-only discovery,
+  content-hash identity, additive membership and directory rules. Their checkboxes are current in the
+  plan. The next task is the durable job queue.
 
-The next action is Task 5, "Implement additive membership and directory rules." Do not repeat
-Tasks 1–4.
+The next action is Task 6, "Add the durable single-worker job queue." Do not repeat Tasks 1–5.
 
 Things a resuming agent will otherwise get wrong:
 

@@ -412,7 +412,7 @@ git commit -m "feat: add document discovery and identity"
 - Produces: `MembershipService.plan_add`, `plan_remove_document`, `plan_patch_rule`, `plan_delete_rule`
 - Produces: `reconcile_rule(rule_id, policy, repositories) -> ReconcileResult`
 
-- [ ] **Step 1: Write failing provenance tests**
+- [x] **Step 1: Write failing provenance tests**
 
 ```python
 def test_direct_membership_wins_over_rule_exclusions(repo: MembershipRepository) -> None:
@@ -432,11 +432,11 @@ def test_rule_reconciliation_removes_departed_file_without_touching_direct(repo:
     assert repo.has_direct(COLLECTION_ID, DEPARTED_HASH)
 ```
 
-- [ ] **Step 2: Run tests and observe failure**
+- [x] **Step 2: Run tests and observe failure**
 
 Run: `uv run pytest tests/domain/test_membership.py tests/indexing/test_reconcile.py tests/storage/test_membership_repository.py -v`
 
-- [ ] **Step 3: Implement desired-state operations**
+- [x] **Step 3: Implement desired-state operations**
 
 Snapshot directory results and file sources call `add_direct`; persistent directories create `r` plus ten hex digits, validate exclusions as exact descendants, then atomically replace that rule's materialized membership. Effective membership is this SQL shape:
 
@@ -455,7 +455,7 @@ ORDER BY collection_id;
 
 Removing a document deletes its direct row and upserts a collection-level rule override. Explicitly adding that file again deletes the override and adds direct membership. Rule deletion returns canonical paths whose effective collection set changed.
 
-- [ ] **Step 4: Verify and commit**
+- [x] **Step 4: Verify and commit**
 
 Run: `uv run pytest tests/domain/test_membership.py tests/indexing/test_reconcile.py tests/storage/test_membership_repository.py -v && uv run ruff check . && uv run mypy src tests`
 
