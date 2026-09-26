@@ -289,3 +289,15 @@ is Xapian's raw weight.
 undocumented Recoll binding attribute for score.
 **Consequences:** unusual filenames do not enter a query parser. Clients can compare score order within
 one query, but the value is a rank proxy. Revisit this once the real Recoll container can be tested.
+
+---
+
+## 2026-09-26 — Rotate CSRF tokens on session reads
+**Status:** accepted
+**Context:** sessions store only SHA-256 token digests, but `GET /auth/session` must return a usable CSRF
+token after a page reload. The raw token cannot be recovered from SQLite.
+**Decision:** authenticate the session, replace its stored CSRF digest, and return a newly generated
+token. The previous token becomes invalid immediately.
+**Alternatives:** store the raw CSRF token; derive a repeatable token from the cookie and a server key.
+**Consequences:** clients should refresh their CSRF token after calling the session endpoint. Session
+storage contains no raw cookie or CSRF token.

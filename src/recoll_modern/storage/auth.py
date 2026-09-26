@@ -115,6 +115,13 @@ class SQLiteAuthRepository:
                 (now.isoformat(), _hash_token(cookie_token)),
             )
 
+    def update_csrf(self, cookie_token: str, csrf_token: str) -> None:
+        with self._database.transaction() as connection:
+            connection.execute(
+                "UPDATE sessions SET csrf_hash = ? WHERE token_hash = ?",
+                (_hash_token(csrf_token), _hash_token(cookie_token)),
+            )
+
     def cleanup_expired(self, now: datetime) -> int:
         with self._database.transaction() as connection:
             cursor = connection.execute(

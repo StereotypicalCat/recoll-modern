@@ -64,6 +64,14 @@ class MembershipRepository:
             )
             return DirectoryRule(str(row[0]), str(row[1]), str(row[2]), exclusions)
 
+    def list_rules(self) -> list[DirectoryRule]:
+        with self._database.connect() as connection:
+            rule_ids = [
+                str(row[0])
+                for row in connection.execute("SELECT id FROM directory_rules ORDER BY id")
+            ]
+        return [rule for rule_id in rule_ids if (rule := self.get_rule(rule_id)) is not None]
+
     def patch_rule(self, rule_id: str, excluded_directories: tuple[str, ...]) -> None:
         with self._database.transaction() as connection:
             connection.execute(

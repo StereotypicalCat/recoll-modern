@@ -719,7 +719,7 @@ git commit -m "feat: add session authentication"
 - Consumes: `Settings`, repositories, `AuthService`, `Engine`, `JobWorker`
 - Produces: `create_app(settings: Settings | None = None, engine: Engine | None = None) -> FastAPI`
 
-- [ ] **Step 1: Write failing API contract tests**
+- [x] **Step 1: Write failing API contract tests**
 
 ```python
 def test_error_envelope(client: TestClient) -> None:
@@ -741,18 +741,18 @@ def test_untrusted_forwarded_prefix_is_ignored(client: TestClient) -> None:
 
 Add tests for every auth route, CSRF on unsafe methods, strict same-origin login checks when `Origin` is present, `Secure` production cookies, request IDs, health 200/503, path traversal, one-level file browsing, list pagination, CRUD, confirmation, and no job on rename/empty creation.
 
-- [ ] **Step 2: Run API tests and observe failure**
+- [x] **Step 2: Run API tests and observe failure**
 
 Run: `uv run pytest tests/api/test_auth.py tests/api/test_health.py tests/api/test_files.py tests/api/test_collections.py tests/api/test_errors.py tests/api/test_root_path.py -v`
 
-- [ ] **Step 3: Implement lifespan and dependency wiring**
+- [x] **Step 3: Implement lifespan and dependency wiring**
 
 The lifespan creates state directories, migrates the database, seeds/refuses auth, recovers jobs,
 enqueues one reconciliation job for all persistent rules, starts the worker, and on exit calls
 `await worker.stop()`. Dependency callables read services from `app.state`. Tests inject a fake engine
 and temporary settings; production constructs `RecollEngine` only through the engine factory.
 
-- [ ] **Step 4: Implement middleware and error mapping**
+- [x] **Step 4: Implement middleware and error mapping**
 
 Map every `AppError` code to the spec status and envelope. Add an opaque request ID to unexpected 500
 responses and logs. Prefix middleware strips the configured prefix from incoming paths before routing,
@@ -761,11 +761,11 @@ configured proxy network, it may instead validate and apply forwarded scheme/hos
 forwarded prefix only when it is present on the incoming path. Ignore all such headers from other
 clients. Do not enable permissive CORS.
 
-- [ ] **Step 5: Implement auth, health, files, and collections routes**
+- [x] **Step 5: Implement auth, health, files, and collections routes**
 
 Use JSON login. Set cookie `recoll_modern_session` as HttpOnly, SameSite=Lax, root-path scoped, and Secure outside explicit development mode. Return CSRF token in the login/session JSON and require `X-CSRF-Token` on POST/PATCH/DELETE. `GET /files` returns name, relative path, kind, size, and mtime for one sorted directory level. Collection create with no sources returns 201; with sources delegates to Task 11 and returns 202. Deletion validates exact confirmation, captures affected paths, deletes database state, and enqueues cleanup.
 
-- [ ] **Step 6: Verify and commit**
+- [x] **Step 6: Verify and commit**
 
 Run: `uv run pytest tests/api -v && uv run ruff check . && uv run mypy src tests`
 

@@ -65,6 +65,8 @@ class AuthRepository(Protocol):
 
     def touch_session(self, cookie_token: str, now: datetime) -> None: ...
 
+    def update_csrf(self, cookie_token: str, csrf_token: str) -> None: ...
+
 
 def normalize_username(username: str) -> tuple[str, str]:
     display = normalize("NFC", username.strip())
@@ -141,6 +143,13 @@ class AuthService:
     def logout(self, cookie_token: str | None) -> None:
         if cookie_token:
             self._repository.delete_session(cookie_token)
+
+    def rotate_csrf(self, cookie_token: str) -> str:
+        """Issue a fresh readable CSRF token for an authenticated session."""
+        self.authenticate(cookie_token)
+        csrf_token = secrets.token_urlsafe(32)
+        self._repository.update_csrf(cookie_token, csrf_token)
+        return csrf_token
 
 
 def _invalid_credentials() -> AppError:

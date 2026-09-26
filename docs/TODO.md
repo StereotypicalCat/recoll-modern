@@ -15,12 +15,12 @@ Where the workflow stands (`AGENTS.md` -> Workflow: brainstorm -> spec -> plan -
   selectable search fields, subpath hosting and the packaging seam for deferred desktop spec 005.
 - Plan `docs/plans/001-search-engine-api.md`: **approved 2026-09-18.** Its listed Python runtime and
   development dependencies are approved. Execution follows the plan task by task.
-- Plan Tasks 1–3 are complete and independently reviewed. Tasks 4–9 add discovery, content-hash
-  identity, additive membership, durable jobs, the atomic membership map, the engine boundary, and
-  session authentication. Their checkboxes are current in the plan. The next task is the HTTP shell.
+- Plan Tasks 1–3 are complete and independently reviewed. Tasks 4–10 add discovery, content-hash
+  identity, additive membership, durable jobs, the atomic membership map, the engine boundary,
+  session authentication and the HTTP shell. Their checkboxes are current in the plan. The next task
+  is membership, rule and job routes.
 
-The next action is Task 10, "Build the FastAPI shell, middleware, and core resources." Do not repeat
-Tasks 1–9.
+The next action is Task 11, "Expose membership, rule, and job APIs." Do not repeat Tasks 1–10.
 
 Things a resuming agent will otherwise get wrong:
 
@@ -56,7 +56,8 @@ Things a resuming agent will otherwise get wrong:
       extraction cost should dwarf the helper, but that is an assumption until measured.
 - [ ] Promote a new canonical path and force a reindex when a canonical path disappears, or the
       document silently leaves every collection it is in.
-- [ ] Recover interrupted indexing jobs at startup; they do not survive a process restart on their own.
+- [x] Recover interrupted indexing jobs at startup; Task 6 requeues valid running jobs and fails
+      unreadable requests.
 - [ ] Write `PRODUCT.md` properly via `/impeccable init` — the current file is a stub from the initial
       brief, not an interview. Blocks spec 002.
 
@@ -68,6 +69,10 @@ Things a resuming agent will otherwise get wrong:
       paths exist, and fail if `AGENTS.md` exceeds 150 lines.
 
 ## Known issues
+- The API test suite reports deprecation warnings from the installed FastAPI/Starlette TestClient
+  dependency. Replace its client integration when the dependency stack supports the successor API.
+- Directory sources currently require a named child of the document root; decide whether the root
+  itself should be accepted as a persistent rule before finishing membership endpoints.
 - Task 3's repository ID test checks the generated collection ID prefix and length rather than asserting
   the full `^c[0-9a-f]{10}$` regex. The implementation uses `secrets.token_hex(5)` and is correct; add
   the stronger regression assertion when work resumes.

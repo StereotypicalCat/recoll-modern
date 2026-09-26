@@ -21,6 +21,7 @@ class Settings:
     inline_text_limit: int
     inline_text_limit_max: int
     session_lifetime_hours: int
+    development_mode: bool
 
     @property
     def database_path(self) -> Path:
@@ -70,4 +71,6 @@ class Settings:
             inline_text_limit=text_default,
             inline_text_limit_max=text_max,
             session_lifetime_hours=session_hours,
+            development_mode=environ.get("RECOLL_MODERN_DEVELOPMENT_MODE", "false").lower()
+            == "true",
         )

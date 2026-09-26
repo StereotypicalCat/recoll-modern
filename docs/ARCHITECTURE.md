@@ -5,8 +5,9 @@ How `recoll-modern` is built today. Update in the same commit as any structural 
 ## Overview
 
 The Python service scaffold, SQLite schema, collection and membership repositories, document
-discovery/identity modules, durable job worker, engine adapter, and authentication service are built.
-The HTTP API remains intended structure. Recoll behaviour below was verified against a real container.
+discovery/identity modules, durable job worker, engine adapter, authentication service, and initial
+HTTP shell are built. Membership, search and job resource routes remain to be added. Recoll behaviour
+below was verified against a real container.
 
 The goal: a self-hosted service that wraps Recoll's indexing and full-text search behind (a) a modern
 web UI and (b) an MCP server, running in Docker, with several independent collections such as
@@ -30,6 +31,7 @@ web UI and (b) an MCP server, running in Docker, with several independent collec
 | `helper/` | C reader run by Recoll's `metadatacmds` for each indexed file |
 | `src/recoll_modern/engine/` | Shared Protocol, deterministic fake, and isolated Recoll Python/indexer adapter |
 | `src/recoll_modern/domain/auth.py`, `storage/auth.py` | Argon2 password checks, seeded administrator, hashed server-side sessions and CSRF verification |
+| `src/recoll_modern/api/` | HTTP auth, health, file browsing, collection metadata, prefix/proxy handling and JSON errors |
 | `tests/` | Automated service tests |
 
 Discovery produces content hashes and root-relative paths without writing to the document volume.
@@ -95,6 +97,12 @@ defaults to 12 hours. `schema_migrations` is forward-only. The exact columns and
 contract in `docs/specs/001-search-engine-api.md`.
 
 ### HTTP boundary
+
+The app lifespan creates state, migrates SQLite, seeds the first administrator, exports the initial
+membership map, recovers interrupted jobs, reconciles persistent rules, and starts/stops one worker.
+Core routes use a server-side session cookie and CSRF token; `GET /auth/session` rotates the token so
+the database only stores hashes. Forwarded scheme, host and prefix are applied only for configured
+proxy networks.
 
 The resource groups are auth, health, read-only file browsing, collections and membership sources,
 directory rules, scoped search, document text/original retrieval, and indexing jobs. Search callers
