@@ -15,13 +15,14 @@ Where the workflow stands (`AGENTS.md` -> Workflow: brainstorm -> spec -> plan -
   selectable search fields, subpath hosting and the packaging seam for deferred desktop spec 005.
 - Plan `docs/plans/001-search-engine-api.md`: **approved 2026-09-18.** Its listed Python runtime and
   development dependencies are approved. Execution follows the plan task by task.
-- Plan Tasks 1–3 are complete and independently reviewed. Tasks 4–12 add discovery, content-hash
+- Plan Tasks 1–3 are complete and independently reviewed. Tasks 4–13 add discovery, content-hash
   identity, additive membership, durable jobs, the atomic membership map, the engine boundary,
   session authentication, the HTTP shell, membership/rule/job routes, scoped search and document
-  retrieval. Their checkboxes are current in the plan. The next task is Docker packaging.
+  retrieval and Docker packaging. Their checkboxes are current in the plan. The next task is final
+  contract, recovery, security and acceptance coverage.
 
-The next action is Task 13, "Package Recoll and the service with Docker Compose." Do not repeat Tasks
-1–12.
+The next action is Task 14, "Complete contract, recovery, security, and acceptance coverage." Do not
+repeat Tasks 1–13.
 
 Things a resuming agent will otherwise get wrong:
 
@@ -48,7 +49,7 @@ Things a resuming agent will otherwise get wrong:
       exact-path text retrieval and whether the Python API exposes a native numeric relevance score.
 - [x] Scaffold Python + FastAPI with `uv`; verify install/dev/test/lint/typecheck/build by running them,
       then record the verified ones in `AGENTS.md`.
-- [ ] Dockerfile + compose: Recoll in the image, document volume mounted `:ro`, writable volumes for
+- [x] Dockerfile + compose: Recoll in the image, document volume mounted `:ro`, writable volumes for
       the index and SQLite.
 - [x] Write the `metadatacmds` membership helper as a fast-starting non-Python program, fed by a flat
       map exported from SQLite. A `python3` helper made a 400-file index 9x slower; Recoll spawns it

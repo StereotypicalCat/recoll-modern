@@ -1,0 +1,29 @@
+services:
+  app:
+    build: .
+    image: recoll-modern:local
+    ports:
+      - "${RECOLL_MODERN_PUBLISH_PORT:-8000}:8000"
+    environment:
+      RECOLL_MODERN_ADMIN_USERNAME: ${RECOLL_MODERN_ADMIN_USERNAME:?Set administrator username}
+      RECOLL_MODERN_ADMIN_PASSWORD: ${RECOLL_MODERN_ADMIN_PASSWORD:?Set administrator password}
+      RECOLL_MODERN_HOST: 0.0.0.0
+      RECOLL_MODERN_PORT: 8000
+      RECOLL_MODERN_ROOT_PATH: ${RECOLL_MODERN_ROOT_PATH:-/}
+      RECOLL_MODERN_TRUSTED_PROXIES: ${RECOLL_MODERN_TRUSTED_PROXIES:-}
+      RECOLL_MODERN_DEVELOPMENT_MODE: ${RECOLL_MODERN_DEVELOPMENT_MODE:-false}
+      RECOLL_MODERN_MEMBERSHIP_MAP: /var/lib/recoll-modern/membership.map
+    volumes:
+      - ${RECOLL_MODERN_DOCUMENTS:?Set documents directory}:/documents:ro
+      - service-state:/var/lib/recoll-modern
+      - recoll-index:/var/lib/recoll
+    healthcheck:
+      test: ["CMD", "python", "-c", "import os,urllib.request; p=os.environ.get('RECOLL_MODERN_ROOT_PATH','/').rstrip('/'); urllib.request.urlopen('http://127.0.0.1:8000'+p+'/health',timeout=5)"]
+      interval: 30s
+      timeout: 8s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+volumes:
+  service-state:
+  recoll-index:

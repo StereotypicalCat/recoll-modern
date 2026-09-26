@@ -34,5 +34,6 @@ helper/recoll-membership
 
 # Recoll runtime data (configuration templates remain tracked)
 recoll.conf
+!docker/recoll.conf
 recoll-config/
 xapiandb/

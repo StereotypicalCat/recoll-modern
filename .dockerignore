@@ -1,0 +1,14 @@
+.git
+.venv
+.pytest_cache
+.ruff_cache
+.mypy_cache
+__pycache__
+dist
+*.sqlite3
+*.sqlite3-shm
+*.sqlite3-wal
+membership.map
+helper/recoll-membership
+.env
+.env.*

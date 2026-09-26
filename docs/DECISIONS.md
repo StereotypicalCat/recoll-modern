@@ -301,3 +301,18 @@ token. The previous token becomes invalid immediately.
 **Alternatives:** store the raw CSRF token; derive a repeatable token from the cookie and a server key.
 **Consequences:** clients should refresh their CSRF token after calling the session endpoint. Session
 storage contains no raw cookie or CSRF token.
+
+---
+
+## 2026-09-26 — Persist writable Recoll config beside service state
+**Status:** accepted
+**Context:** Debian Recoll 1.43 writes generated support files into its config directory. A non-root
+container cannot write to image-owned `/etc/recoll-modern`; a live first-boot test surfaced this.
+**Decision:** keep immutable templates under `/etc/recoll-modern`, copy each missing template into
+`/var/lib/recoll-modern/recoll-config` on startup, and point both the engine and indexer there. Never
+overwrite an existing runtime config file. Keep the Recoll index in its own named volume.
+**Alternatives:** chown `/etc/recoll-modern` in the image (runtime changes would not survive container
+replacement); run the service as root.
+**Consequences:** service-state backups include generated Recoll configuration, and config changes made
+by an operator persist across image upgrades. Template updates require an explicit migration if an
+existing config should adopt them.

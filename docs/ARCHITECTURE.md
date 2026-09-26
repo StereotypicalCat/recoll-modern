@@ -6,8 +6,8 @@ How `recoll-modern` is built today. Update in the same commit as any structural 
 
 The Python service scaffold, SQLite schema, collection and membership repositories, document
 discovery/identity modules, durable job worker, engine adapter, authentication service, and initial
-HTTP shell, membership routes, job routes, scoped search, and document retrieval are built. Docker
-packaging and real-container contract coverage remain. Recoll behaviour
+HTTP shell, membership routes, job routes, scoped search, document retrieval, and Docker packaging are
+built. Final contract, recovery and security acceptance coverage remains. Recoll behaviour
 below was verified against a real container.
 
 The goal: a self-hosted service that wraps Recoll's indexing and full-text search behind (a) a modern
@@ -30,6 +30,7 @@ web UI and (b) an MCP server, running in Docker, with several independent collec
 | `src/recoll_modern/indexing/handlers.py` | Scans membership sources before strict-mode mutations and records file errors |
 | `src/recoll_modern/indexing/map_export.py` | Writes a durable atomic map from canonical paths to opaque collection IDs |
 | `helper/` | C reader run by Recoll's `metadatacmds` for each indexed file |
+| `Dockerfile`, `compose.yaml`, `docker/` | Non-root Recoll runtime, read-only document mount, persistent state/index volumes and config templates |
 | `src/recoll_modern/engine/` | Shared Protocol, deterministic fake, and isolated Recoll Python/indexer adapter |
 | `src/recoll_modern/domain/auth.py`, `storage/auth.py` | Argon2 password checks, seeded administrator, hashed server-side sessions and CSRF verification |
 | `src/recoll_modern/api/` | HTTP auth, health, file browsing, collection/membership/rule/job resources, search, document retrieval, prefix/proxy handling and JSON errors |
@@ -114,6 +115,13 @@ Search passes all requested collection IDs into one engine query, then verifies 
 membership in SQLite before returning them. Full-text and original-file routes resolve a live canonical
 path under the configured root. Original responses use range-capable `FileResponse`, with inline display
 limited to safe media types.
+
+The image installs Recoll and its Python binding from Debian trixie, and syncs the application into a
+system-site-packages venv so the binding remains importable. A separate build stage compiles the C
+helper. The non-root process copies Recoll config templates into the persistent state volume only when
+absent; Recoll may generate additional support files there. Compose mounts documents read-only and
+keeps the SQLite/config and Xapian index volumes separate. Initial health can be 503 until an indexing
+job creates the first index.
 
 The resource groups are auth, health, read-only file browsing, collections and membership sources,
 directory rules, scoped search, document text/original retrieval, and indexing jobs. Search callers

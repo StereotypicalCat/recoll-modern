@@ -902,7 +902,7 @@ git commit -m "feat: add scoped search and retrieval"
 - Produces: `docker compose up --build` service on configured host port and root path
 - Consumes: `recoll-modern`, `recoll-membership`, persisted state and document volumes
 
-- [ ] **Step 1: Write failing container smoke tests**
+- [x] **Step 1: Write failing container smoke tests**
 
 ```python
 def test_document_mount_is_read_only(compose_service: ComposeService) -> None:
@@ -916,7 +916,7 @@ def test_recoll_binding_and_helper_are_present(compose_service: ComposeService) 
 
 The fixture skips with `Docker Compose service is not running` when unavailable for normal host test runs; a dedicated `RECOLL_MODERN_REQUIRE_DOCKER=1` mode converts absence into failure for container CI.
 
-- [ ] **Step 2: Add the multi-stage image and Compose deployment**
+- [x] **Step 2: Add the multi-stage image and Compose deployment**
 
 Base both stages on `debian:trixie-slim`; copy uv from `ghcr.io/astral-sh/uv:0.12.16`. Install
 `build-essential` only in the helper build stage. Runtime installs `python3`, `python3-recoll`, `recoll`,
@@ -933,7 +933,7 @@ Before accepting the image, assert `python -c 'from recoll import recoll'` durin
 
 Compose mounts `${RECOLL_MODERN_DOCUMENTS:?}:/documents:ro`, separate named volumes at `/var/lib/recoll-modern` and `/var/lib/recoll`, and seeds admin credentials through environment variables without defaults. Healthcheck calls `/health` at the configured prefix.
 
-- [ ] **Step 3: Configure Recoll**
+- [x] **Step 3: Configure Recoll**
 
 `recoll.conf` sets `topdirs = /documents`, a persistent `dbdir`, text storage, and:
 
@@ -943,7 +943,7 @@ metadatacmds = ; collection = /usr/local/bin/recoll-membership %f
 
 Define `collection` as a stored/queryable field in `fields`. The service passes `RECOLL_MODERN_MEMBERSHIP_MAP` to all `recollindex` subprocesses. Never initialize by deleting an existing index.
 
-- [ ] **Step 4: Run image, integration, and read-only tests**
+- [x] **Step 4: Run image, integration, and read-only tests**
 
 Run:
 
@@ -957,7 +957,7 @@ docker compose down
 
 Expected: image and configuration succeed; generated corpus indexes and searches on a read-only mount; shutdown preserves volumes. Do not pass `-v` to `docker compose down`.
 
-- [ ] **Step 5: Document and commit**
+- [x] **Step 5: Document and commit**
 
 Document first boot, subpath proxying, trusted proxies, volumes, admin seed rotation, backups, health, and explicit non-destructive reindex behavior. Record image/process boundaries in architecture and any packaging choices in decisions.
 
