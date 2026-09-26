@@ -530,7 +530,7 @@ git commit -m "feat: add durable indexing jobs"
 - Produces: `export_membership_map(repository, destination: Path) -> None`
 - Produces: `recoll-membership FILE_PATH`, reading `RECOLL_MODERN_MEMBERSHIP_MAP`
 
-- [ ] **Step 1: Write failing binary-format and helper tests**
+- [x] **Step 1: Write failing binary-format and helper tests**
 
 ```python
 def test_export_is_atomic_and_handles_newlines(tmp_path: Path) -> None:
@@ -546,21 +546,21 @@ def test_helper_returns_sorted_space_separated_ids(compiled_helper: Path, map_fi
     assert result.stdout == "c0000000001 c0000000002\n"
 ```
 
-- [ ] **Step 2: Run tests and observe failure**
+- [x] **Step 2: Run tests and observe failure**
 
 Run: `uv run pytest tests/indexing/test_map_export.py tests/helper/test_membership_helper.py -v`
 
-- [ ] **Step 3: Implement the robust flat-map format and C reader**
+- [x] **Step 3: Implement the robust flat-map format and C reader**
 
 The format is `RCM1`, followed by sorted records of big-endian `uint32 path_length`, raw UTF-8 path bytes, big-endian `uint32 value_length`, and ASCII space-separated collection IDs. The exporter writes and fsyncs a sibling temporary file, chmods it `0640`, `os.replace()`s it, then fsyncs the parent directory. Paths in this private map are absolute because Recoll passes `%f`; no API exposes them.
 
 The C helper opens the configured map read-only, validates every length against file size and a 16 MiB ceiling, scans records with `memcmp`, writes only the matched value plus newline, returns 0 for no membership, and returns nonzero with a generic stderr message for corrupt/unreadable maps. Compile with `cc -std=c17 -O2 -Wall -Wextra -Werror`.
 
-- [ ] **Step 4: Wire export before every forced reindex**
+- [x] **Step 4: Wire export before every forced reindex**
 
 Extend `MembershipJobHandler` so a successful desired-state transaction calls `export_membership_map` once, then invokes the engine with the distinct sorted changed canonical paths. Add a failure-injection test proving the old map remains intact if write or replace fails.
 
-- [ ] **Step 5: Verify and commit**
+- [x] **Step 5: Verify and commit**
 
 Run: `make -C helper clean all && uv run pytest tests/indexing/test_map_export.py tests/helper/test_membership_helper.py tests/indexing/test_job_handlers.py -v && uv run ruff check . && uv run mypy src tests`
 

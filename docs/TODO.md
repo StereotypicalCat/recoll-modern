@@ -15,12 +15,11 @@ Where the workflow stands (`AGENTS.md` -> Workflow: brainstorm -> spec -> plan -
   selectable search fields, subpath hosting and the packaging seam for deferred desktop spec 005.
 - Plan `docs/plans/001-search-engine-api.md`: **approved 2026-09-18.** Its listed Python runtime and
   development dependencies are approved. Execution follows the plan task by task.
-- Plan Tasks 1–3 are complete and independently reviewed. Tasks 4–6 add read-only discovery,
-  content-hash identity, additive membership, directory rules and durable jobs. Their checkboxes are
-  current in the plan. The next task is membership-map export and the native helper.
+- Plan Tasks 1–3 are complete and independently reviewed. Tasks 4–7 add discovery, content-hash
+  identity, additive membership, durable jobs, and the atomic membership map with its C helper. Their
+  checkboxes are current in the plan. The next task is the engine contract and Recoll adapter.
 
-The next action is Task 7, "Export membership atomically and build the native helper." Do not repeat
-Tasks 1–6.
+The next action is Task 8, "Define the engine contract and Recoll adapter." Do not repeat Tasks 1–7.
 
 Things a resuming agent will otherwise get wrong:
 

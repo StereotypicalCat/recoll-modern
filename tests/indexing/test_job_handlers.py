@@ -22,8 +22,14 @@ def _setup(
     collection_id = SQLiteCollectionRepository(database).create(CollectionCreate("Books")).id
     jobs = JobRepository(database)
     membership = MembershipRepository(database)
+
+    class NoopIndexer:
+        def force_reindex(self, paths: tuple[str, ...]) -> None:
+            pass
+
     handler = MembershipJobHandler(
-        PathPolicy(root), DocumentRepository(database), membership, jobs
+        PathPolicy(root), DocumentRepository(database), membership, jobs,
+        tmp_path / "membership.map", NoopIndexer(),
     )
     return root, jobs, membership, handler, collection_id
 
@@ -56,3 +62,30 @@ def test_best_effort_applies_valid_files_and_records_errors(tmp_path: Path) -> N
     assert [(error.relative_path, error.code) for error in jobs.file_errors(job.id)] == [
         ("gone.txt", "file_vanished")
     ]
+
+
+def test_handler_exports_map_before_forced_reindex(tmp_path: Path) -> None:
+    root, jobs, membership, _, collection_id = _setup(tmp_path)
+    map_path = tmp_path / "membership.map"
+    calls: list[tuple[str, ...]] = []
+
+    class FakeIndexer:
+        def force_reindex(self, paths: tuple[str, ...]) -> None:
+            assert map_path.read_bytes().startswith(b"RCM1")
+            assert collection_id.encode() in map_path.read_bytes()
+            calls.append(paths)
+
+    database = Database(tmp_path / "state.sqlite3")
+    handler = MembershipJobHandler(
+        PathPolicy(root), DocumentRepository(database), membership, jobs,
+        map_path, FakeIndexer(),
+    )
+    job = jobs.enqueue("membership_add", {
+        "collection_id": collection_id,
+        "sources": [{"type": "file", "path": "good.txt"}],
+    }, False)
+    claimed = jobs.claim_next()
+    assert claimed is not None
+    handler.handle(claimed)
+    assert calls == [(str(root / "good.txt"),)]
+    assert jobs.get(job.id).state == JobState.COMPLETED  # type: ignore[union-attr]

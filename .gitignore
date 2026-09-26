@@ -30,6 +30,7 @@ htmlcov/
 *.sqlite3-shm
 *.sqlite3-wal
 membership.map
+helper/recoll-membership
 
 # Recoll runtime data (configuration templates remain tracked)
 recoll.conf

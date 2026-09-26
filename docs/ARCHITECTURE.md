@@ -26,6 +26,8 @@ web UI and (b) an MCP server, running in Docker, with several independent collec
 | `src/recoll_modern/indexing/reconcile.py` | Refreshes persistent directory rules while retaining excluded or unreadable files as present |
 | `src/recoll_modern/indexing/worker.py` | Claims one durable job at a time and runs blocking handlers off the event loop |
 | `src/recoll_modern/indexing/handlers.py` | Scans membership sources before strict-mode mutations and records file errors |
+| `src/recoll_modern/indexing/map_export.py` | Writes a durable atomic map from canonical paths to opaque collection IDs |
+| `helper/` | C reader run by Recoll's `metadatacmds` for each indexed file |
 | `tests/` | Automated service tests |
 
 Discovery produces content hashes and root-relative paths without writing to the document volume.
@@ -69,10 +71,12 @@ future distribution track and starts only after the hosted product through 004 i
 | `engine/` | The search/index Protocol, fake implementation and Recoll adapter |
 | `app.py` | Configuration, dependency wiring and lifecycle |
 
-Only `engine/` may import Recoll or invoke `recollindex`. Membership changes first establish desired
-state in SQLite, atomically export the helper's flat map, then force-index affected canonical paths.
-Engine retries are therefore idempotent. Persistent directory rules reconcile at startup and on an
-explicit reindex, not through live filesystem monitoring.
+Only `engine/` may import Recoll or invoke `recollindex`. Membership jobs first establish desired
+state in SQLite, atomically export the helper's `RCM1` flat map, then ask the engine to force-index
+affected canonical paths. Map records use length-prefixed absolute UTF-8 paths, so filenames can
+contain newlines. The C helper reads this private map without starting Python. Engine retries are
+therefore idempotent. Persistent directory rules reconcile at startup and on an explicit reindex,
+not through live filesystem monitoring.
 
 ### Storage model
 

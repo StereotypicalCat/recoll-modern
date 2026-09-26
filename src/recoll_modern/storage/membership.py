@@ -4,6 +4,7 @@ import secrets
 import sqlite3
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from pathlib import Path
 
 from recoll_modern.storage.database import Database
 
@@ -172,6 +173,19 @@ class MembershipRepository:
     def effective_collections(self, content_hash: str) -> list[str]:
         with self._database.connect() as connection:
             return _effective(connection, content_hash)
+
+    def membership_map_rows(self, document_root: Path) -> list[tuple[str, list[str]]]:
+        """Return absolute canonical paths with their effective collection tags."""
+        with self._database.connect() as connection:
+            paths = connection.execute(
+                "SELECT relative_path, document_hash FROM document_paths "
+                "WHERE is_canonical = 1 AND missing_at IS NULL ORDER BY relative_path"
+            ).fetchall()
+            return [
+                (str(document_root / str(row[0])), collections)
+                for row in paths
+                if (collections := _effective(connection, str(row[1])))
+            ]
 
 
 def _effective(connection: sqlite3.Connection, content_hash: str) -> list[str]:
