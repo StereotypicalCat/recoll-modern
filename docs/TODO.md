@@ -15,12 +15,12 @@ Where the workflow stands (`AGENTS.md` -> Workflow: brainstorm -> spec -> plan -
   selectable search fields, subpath hosting and the packaging seam for deferred desktop spec 005.
 - Plan `docs/plans/001-search-engine-api.md`: **approved 2026-09-18.** Its listed Python runtime and
   development dependencies are approved. Execution follows the plan task by task.
-- Plan Tasks 1–3 are complete and independently reviewed. Tasks 4–10 add discovery, content-hash
+- Plan Tasks 1–3 are complete and independently reviewed. Tasks 4–11 add discovery, content-hash
   identity, additive membership, durable jobs, the atomic membership map, the engine boundary,
-  session authentication and the HTTP shell. Their checkboxes are current in the plan. The next task
-  is membership, rule and job routes.
+  session authentication, the HTTP shell, and membership/rule/job routes. Their checkboxes are current
+  in the plan. The next task is scoped search and document retrieval.
 
-The next action is Task 11, "Expose membership, rule, and job APIs." Do not repeat Tasks 1–10.
+The next action is Task 12, "Expose scoped search and document retrieval." Do not repeat Tasks 1–11.
 
 Things a resuming agent will otherwise get wrong:
 
@@ -49,7 +49,7 @@ Things a resuming agent will otherwise get wrong:
       then record the verified ones in `AGENTS.md`.
 - [ ] Dockerfile + compose: Recoll in the image, document volume mounted `:ro`, writable volumes for
       the index and SQLite.
-- [ ] Write the `metadatacmds` membership helper as a fast-starting non-Python program, fed by a flat
+- [x] Write the `metadatacmds` membership helper as a fast-starting non-Python program, fed by a flat
       map exported from SQLite. A `python3` helper made a 400-file index 9x slower; Recoll spawns it
       once per file per index run.
 - [ ] Re-measure indexing overhead against real documents (PDF, EPUB) rather than small text files —

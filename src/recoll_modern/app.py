@@ -8,12 +8,15 @@ from datetime import timedelta
 from fastapi import FastAPI
 
 from recoll_modern.api import auth, collections, files, health
+from recoll_modern.api import jobs as job_routes
+from recoll_modern.api import memberships as membership_routes
 from recoll_modern.api.errors import install_error_handlers
 from recoll_modern.api.middleware import PrefixMiddleware
 from recoll_modern.config import Settings
 from recoll_modern.domain.auth import AuthService
 from recoll_modern.domain.collections import CollectionService
 from recoll_modern.domain.jobs import Job
+from recoll_modern.domain.membership import MembershipService
 from recoll_modern.engine.protocol import Engine
 from recoll_modern.engine.recoll import RecollEngine
 from recoll_modern.indexing.handlers import MembershipJobHandler
@@ -53,6 +56,12 @@ def create_app(settings: Settings | None = None, engine: Engine | None = None) -
         jobs = JobRepository(database)
         map_rows = MembershipMapRows(memberships, policy.root)
         export_membership_map(map_rows, settings.membership_map_path)
+        membership_service = MembershipService(policy, documents, memberships)
+
+        def reindex_changed(paths: tuple[str, ...]) -> None:
+            export_membership_map(map_rows, settings.membership_map_path)
+            if paths:
+                engine.force_reindex(tuple(str(policy.root / path) for path in sorted(set(paths))))
 
         def cleanup(job: Job) -> None:
             export_membership_map(map_rows, settings.membership_map_path)
@@ -71,6 +80,50 @@ def create_app(settings: Settings | None = None, engine: Engine | None = None) -
             if changed:
                 engine.force_reindex(tuple(str(policy.root / path) for path in sorted(changed)))
 
+        def remove_membership(job: Job) -> None:
+            collection_id = job.request.get("collection_id")
+            content_hash = job.request.get("document_hash")
+            if not isinstance(collection_id, str) or not isinstance(content_hash, str):
+                raise ValueError("invalid membership removal job")
+            changed = membership_service.plan_remove_document(collection_id, content_hash)
+            reindex_changed(changed)
+
+        def patch_rule(job: Job) -> None:
+            rule_id = job.request.get("rule_id")
+            exclusions = job.request.get("excluded_directories")
+            if not isinstance(rule_id, str) or not isinstance(exclusions, list):
+                raise ValueError("invalid rule patch job")
+            if not all(isinstance(item, str) for item in exclusions):
+                raise ValueError("invalid rule patch job")
+            result = membership_service.plan_patch_rule(rule_id, tuple(exclusions))
+            reindex_changed(result.changed_paths)
+
+        def delete_rule(job: Job) -> None:
+            rule_id = job.request.get("rule_id")
+            if not isinstance(rule_id, str):
+                raise ValueError("invalid rule deletion job")
+            reindex_changed(membership_service.plan_delete_rule(rule_id))
+
+        def reindex(job: Job) -> None:
+            paths = job.request.get("paths", [])
+            collections_requested = job.request.get("collections", [])
+            if not isinstance(paths, list) or not isinstance(collections_requested, list):
+                raise ValueError("invalid reindex job")
+            for rule in memberships.list_rules():
+                reconcile_rule(rule.id, policy, documents, memberships)
+            export_membership_map(map_rows, settings.membership_map_path)
+            selected = {
+                str(policy.root / path) for path in paths if isinstance(path, str)
+            }
+            requested_ids = {item for item in collections_requested if isinstance(item, str)}
+            for path, ids in memberships.membership_map_rows(policy.root):
+                if requested_ids.intersection(ids):
+                    selected.add(path)
+            if not selected and not paths and not collections_requested:
+                selected.add(str(policy.root))
+            if selected:
+                engine.force_reindex(tuple(sorted(selected)))
+
         membership_handler = MembershipJobHandler(
             policy, documents, memberships, jobs, settings.membership_map_path, engine
         )
@@ -78,6 +131,10 @@ def create_app(settings: Settings | None = None, engine: Engine | None = None) -
             "membership_add": membership_handler.handle,
             "collection_cleanup": cleanup,
             "reconcile_rules": reconcile_all,
+            "membership_remove": remove_membership,
+            "rule_patch": patch_rule,
+            "rule_delete": delete_rule,
+            "reindex": reindex,
         })
         app.state.settings = settings
         app.state.database = database
@@ -90,7 +147,7 @@ def create_app(settings: Settings | None = None, engine: Engine | None = None) -
         app.state.jobs = jobs
         app.state.worker = worker
         if memberships.list_rules():
-            jobs.enqueue("reconcile_rules", {}, False)
+            jobs.enqueue("reconcile_rules", {"version": 1}, False)
         worker.start()
         try:
             yield
@@ -104,4 +161,6 @@ def create_app(settings: Settings | None = None, engine: Engine | None = None) -
     app.include_router(health.router)
     app.include_router(files.router)
     app.include_router(collections.router)
+    app.include_router(membership_routes.router)
+    app.include_router(job_routes.router)
     return app

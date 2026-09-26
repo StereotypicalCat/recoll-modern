@@ -195,6 +195,58 @@ class MembershipRepository:
                 if (collections := _effective(connection, str(row[1])))
             ]
 
+    def list_documents(
+        self, collection_id: str, limit: int, offset: int
+    ) -> tuple[list[dict[str, object]], int]:
+        with self._database.connect() as connection:
+            hashes = [
+                str(row[0])
+                for row in connection.execute(
+                    "SELECT content_hash FROM documents ORDER BY content_hash"
+                )
+                if collection_id in _effective(connection, str(row[0]))
+            ]
+            items: list[dict[str, object]] = []
+            for content_hash in hashes[offset:offset + limit]:
+                doc = connection.execute(
+                    "SELECT byte_size, state FROM documents WHERE content_hash = ?",
+                    (content_hash,),
+                ).fetchone()
+                canonical = connection.execute(
+                    "SELECT relative_path FROM document_paths "
+                    "WHERE document_hash = ? AND is_canonical = 1",
+                    (content_hash,),
+                ).fetchone()
+                direct = connection.execute(
+                    "SELECT 1 FROM direct_memberships "
+                    "WHERE collection_id = ? AND document_hash = ?",
+                    (collection_id, content_hash),
+                ).fetchone() is not None
+                rules = [
+                    str(row[0])
+                    for row in connection.execute(
+                        "SELECT r.id FROM rule_memberships AS rm "
+                        "JOIN directory_rules AS r ON r.id = rm.rule_id "
+                        "WHERE r.collection_id = ? AND rm.document_hash = ? ORDER BY r.id",
+                        (collection_id, content_hash),
+                    )
+                ]
+                override = connection.execute(
+                    "SELECT 1 FROM membership_exclusions "
+                    "WHERE collection_id = ? AND document_hash = ?",
+                    (collection_id, content_hash),
+                ).fetchone() is not None
+                items.append({
+                    "document_id": content_hash,
+                    "path": str(canonical[0]) if canonical is not None else None,
+                    "size": int(doc[0]),
+                    "state": str(doc[1]),
+                    "direct": direct,
+                    "contributing_rules": rules,
+                    "override": override,
+                })
+            return items, len(hashes)
+
 
 def _effective(connection: sqlite3.Connection, content_hash: str) -> list[str]:
     return [

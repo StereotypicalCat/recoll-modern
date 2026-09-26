@@ -7,7 +7,7 @@ from fastapi import APIRouter, Request, Response
 from fastapi.encoders import jsonable_encoder
 
 from recoll_modern.api.dependencies import require_user
-from recoll_modern.api.schemas import CollectionCreateBody, CollectionPatchBody
+from recoll_modern.api.schemas import CollectionCreateBody, CollectionPatchBody, validated_sources
 from recoll_modern.domain.errors import AppError
 from recoll_modern.domain.models import UNSET, CollectionCreate, CollectionPatch
 
@@ -37,14 +37,18 @@ def create_collection(
     body: CollectionCreateBody, request: Request, response: Response
 ) -> dict[str, object]:
     require_user(request)
+    sources = (
+        validated_sources(request.app.state.path_policy, body.sources)
+        if body.sources else []
+    )
     collection = request.app.state.collections.create(
         CollectionCreate(body.name, body.description)
     )
     payload = jsonable_encoder(asdict(collection))
-    if body.sources:
+    if sources:
         job = request.app.state.jobs.enqueue(
             "membership_add",
-            {"collection_id": collection.id, "sources": body.sources},
+            {"version": 1, "collection_id": collection.id, "sources": sources},
             body.fail_on_file_error,
         )
         request.app.state.worker.notify()
@@ -76,7 +80,7 @@ def delete_collection(
         raise AppError("confirmation_required", "Collection name confirmation is required", 409)
     paths = request.app.state.collections.delete(collection_id)
     job = request.app.state.jobs.enqueue(
-        "collection_cleanup", {"paths": paths}, False
+        "collection_cleanup", {"version": 1, "paths": paths}, False
     )
     request.app.state.worker.notify()
     return {"job_id": job.id}

@@ -787,7 +787,7 @@ git commit -m "feat: add authenticated HTTP service"
 - Consumes: Task 5 membership plans and Task 6 job repository
 - Produces: spec endpoints under `/collections/{id}/memberships`, `/directory-rules`, and `/jobs`
 
-- [ ] **Step 1: Write failing request/response tests**
+- [x] **Step 1: Write failing request/response tests**
 
 ```python
 def test_persistent_directory_request_enqueues_replayable_job(client: TestClient) -> None:
@@ -808,11 +808,11 @@ def test_removing_rule_preserves_overlapping_membership(client: TestClient) -> N
 
 Cover invalid source combinations, exclusions outside source, default best-effort, strict atomicity, effective provenance, per-file overrides, patching rule exclusions, non-retryable jobs, and 50/200 pagination.
 
-- [ ] **Step 2: Run tests and observe failure**
+- [x] **Step 2: Run tests and observe failure**
 
 Run: `uv run pytest tests/api/test_memberships.py tests/api/test_jobs.py -v`
 
-- [ ] **Step 3: Implement validated schemas and routes**
+- [x] **Step 3: Implement validated schemas and routes**
 
 Use discriminated Pydantic models `FileSource(type="file", path)` and
 `DirectorySource(type="directory", path, mode, excluded_directories)`. Reject mode/exclusions on files
@@ -823,7 +823,7 @@ effective membership plus `direct`, contributing rule IDs, and override state. I
 collection IDs and uses the whole document root when neither is present. Retry accepts failed or
 completed-with-errors jobs only.
 
-- [ ] **Step 4: Verify and commit**
+- [x] **Step 4: Verify and commit**
 
 Run: `uv run pytest tests/api/test_memberships.py tests/api/test_jobs.py -v && uv run ruff check . && uv run mypy src tests`
 

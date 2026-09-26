@@ -1,5 +1,7 @@
 """Atomic SQLite transitions for indexing jobs."""
 
+from __future__ import annotations
+
 import json
 import secrets
 import sqlite3
@@ -41,6 +43,15 @@ class JobRepository:
         with self._database.connect() as connection:
             row = connection.execute("SELECT * FROM jobs WHERE id = ?", (job_id,)).fetchone()
             return _job_from_row(row) if row is not None else None
+
+    def list_jobs(self, limit: int, offset: int) -> tuple[list[Job], int]:
+        with self._database.connect() as connection:
+            total = int(connection.execute("SELECT COUNT(*) FROM jobs").fetchone()[0])
+            rows = connection.execute(
+                "SELECT * FROM jobs ORDER BY created_at DESC, rowid DESC LIMIT ? OFFSET ?",
+                (limit, offset),
+            ).fetchall()
+            return [_job_from_row(row) for row in rows], total
 
     def claim_next(self) -> Job | None:
         with self._database.transaction() as connection:
@@ -130,7 +141,7 @@ class JobRepository:
             cursor = connection.execute(
                 "UPDATE jobs SET state = 'queued', error_code = NULL, error_message = NULL, "
                 "started_at = NULL, finished_at = NULL, progress = 0, total = 0 "
-                "WHERE id = ? AND state = 'failed'",
+                "WHERE id = ? AND state IN ('failed', 'completed_with_errors')",
                 (job_id,),
             )
             if cursor.rowcount != 1:
