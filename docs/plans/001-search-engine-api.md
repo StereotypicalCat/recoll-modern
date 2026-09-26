@@ -845,7 +845,7 @@ git commit -m "feat: expose membership and job APIs"
 - Produces: `SearchService.search(SearchInput) -> SearchResult`
 - Produces: `GET /search`, `GET /documents/{hash}/text`, `GET /documents/{hash}/file`
 
-- [ ] **Step 1: Write failing scope and projection tests**
+- [x] **Step 1: Write failing scope and projection tests**
 
 ```python
 def test_search_requires_scope(client: TestClient) -> None:
@@ -865,21 +865,21 @@ def test_field_projection_and_text_limit(client: TestClient) -> None:
 
 Add tests for unknown collections/fields, repeated collections, default fields, one ranked set, approximate total flag, 20/100 pagination, mount-safe links, missing documents, safe Content-Disposition, MIME type, and byte ranges (`206`, `Content-Range`, invalid range `416`).
 
-- [ ] **Step 2: Run tests and observe failure**
+- [x] **Step 2: Run tests and observe failure**
 
 Run: `uv run pytest tests/domain/test_search.py tests/api/test_search.py tests/api/test_documents.py -v`
 
-- [ ] **Step 3: Implement search validation and projection**
+- [x] **Step 3: Implement search validation and projection**
 
 Require nonblank `q`, at least one unique existing collection ID, `offset >= 0`, and `1 <= limit <= 100`. Allowed fields are exactly `title`, `author`, `path`, `mime_type`, `size`, `date`, `score`, `collections`, `snippets`, `text`, and `links`; always emit `document_id`. Default to all metadata, collections, and snippets. Set `fetch_text=True` only when requested, clamp `text_limit` to the configured maximum, slice by Unicode code points, and emit `text_truncated` only with text.
 
 Resolve hit collection IDs from SQLite, not stale engine metadata. Build links with `request.url_for`, so configured/trusted scope supplies scheme, host, and prefix.
 
-- [ ] **Step 4: Implement full text and original streaming**
+- [x] **Step 4: Implement full text and original streaming**
 
 Look up the live canonical path by hash and return `document_not_found` for unknown hashes or `document_missing` when none remains. Text delegates to `Engine.extracted_text`. Original files use Starlette `FileResponse`, which handles byte ranges, after a final containment/open check. Sanitize the download filename to remove CR/LF/quotes and use RFC 5987 encoding; use `attachment` for HTML/SVG and `inline` only for an allowlist of safe document/media types.
 
-- [ ] **Step 5: Verify and commit**
+- [x] **Step 5: Verify and commit**
 
 Run: `uv run pytest tests/domain/test_search.py tests/api/test_search.py tests/api/test_documents.py -v && uv run ruff check . && uv run mypy src tests`
 

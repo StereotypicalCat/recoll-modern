@@ -32,6 +32,15 @@ class DocumentRepository:
         with self._database.connect() as connection:
             return _record(connection, content_hash)
 
+    def by_path(self, relative_path: str) -> DocumentRecord | None:
+        with self._database.connect() as connection:
+            row = connection.execute(
+                "SELECT document_hash FROM document_paths "
+                "WHERE relative_path = ? AND missing_at IS NULL",
+                (relative_path,),
+            ).fetchone()
+            return _record(connection, str(row[0])) if row is not None else None
+
     def known_paths_under(self, relative_directory: str) -> tuple[str, ...]:
         """Return known live paths beneath a directory for explicit reconciliation."""
         prefix = relative_directory + "/"

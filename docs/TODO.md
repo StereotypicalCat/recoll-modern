@@ -15,12 +15,13 @@ Where the workflow stands (`AGENTS.md` -> Workflow: brainstorm -> spec -> plan -
   selectable search fields, subpath hosting and the packaging seam for deferred desktop spec 005.
 - Plan `docs/plans/001-search-engine-api.md`: **approved 2026-09-18.** Its listed Python runtime and
   development dependencies are approved. Execution follows the plan task by task.
-- Plan Tasks 1–3 are complete and independently reviewed. Tasks 4–11 add discovery, content-hash
+- Plan Tasks 1–3 are complete and independently reviewed. Tasks 4–12 add discovery, content-hash
   identity, additive membership, durable jobs, the atomic membership map, the engine boundary,
-  session authentication, the HTTP shell, and membership/rule/job routes. Their checkboxes are current
-  in the plan. The next task is scoped search and document retrieval.
+  session authentication, the HTTP shell, membership/rule/job routes, scoped search and document
+  retrieval. Their checkboxes are current in the plan. The next task is Docker packaging.
 
-The next action is Task 12, "Expose scoped search and document retrieval." Do not repeat Tasks 1–11.
+The next action is Task 13, "Package Recoll and the service with Docker Compose." Do not repeat Tasks
+1–12.
 
 Things a resuming agent will otherwise get wrong:
 
@@ -69,6 +70,10 @@ Things a resuming agent will otherwise get wrong:
       paths exist, and fail if `AGENTS.md` exceeds 150 lines.
 
 ## Known issues
+- Original file download checks containment before returning `FileResponse`; harden against a local
+  symlink swap between that check and the response's file open before shipping to untrusted local
+  writers. The Compose document mount is read-only to the service, but host writers may still replace
+  entries concurrently.
 - The API test suite reports deprecation warnings from the installed FastAPI/Starlette TestClient
   dependency. Replace its client integration when the dependency stack supports the successor API.
 - Directory sources currently require a named child of the document root; decide whether the root

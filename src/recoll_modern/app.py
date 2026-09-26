@@ -8,8 +8,10 @@ from datetime import timedelta
 from fastapi import FastAPI
 
 from recoll_modern.api import auth, collections, files, health
+from recoll_modern.api import documents as document_routes
 from recoll_modern.api import jobs as job_routes
 from recoll_modern.api import memberships as membership_routes
+from recoll_modern.api import search as search_routes
 from recoll_modern.api.errors import install_error_handlers
 from recoll_modern.api.middleware import PrefixMiddleware
 from recoll_modern.config import Settings
@@ -17,6 +19,7 @@ from recoll_modern.domain.auth import AuthService
 from recoll_modern.domain.collections import CollectionService
 from recoll_modern.domain.jobs import Job
 from recoll_modern.domain.membership import MembershipService
+from recoll_modern.domain.search import SearchService
 from recoll_modern.engine.protocol import Engine
 from recoll_modern.engine.recoll import RecollEngine
 from recoll_modern.indexing.handlers import MembershipJobHandler
@@ -146,6 +149,9 @@ def create_app(settings: Settings | None = None, engine: Engine | None = None) -
         app.state.documents = documents
         app.state.jobs = jobs
         app.state.worker = worker
+        app.state.search = SearchService(
+            engine, documents, memberships, policy, settings.inline_text_limit_max
+        )
         if memberships.list_rules():
             jobs.enqueue("reconcile_rules", {"version": 1}, False)
         worker.start()
@@ -163,4 +169,6 @@ def create_app(settings: Settings | None = None, engine: Engine | None = None) -
     app.include_router(collections.router)
     app.include_router(membership_routes.router)
     app.include_router(job_routes.router)
+    app.include_router(search_routes.router)
+    app.include_router(document_routes.router)
     return app
