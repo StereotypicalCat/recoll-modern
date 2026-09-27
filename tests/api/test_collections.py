@@ -1,5 +1,6 @@
 from typing import cast
 
+import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
@@ -45,4 +46,24 @@ def test_empty_create_and_rename_do_not_enqueue_jobs(
     client.patch(f"/collections/{collection_id}", json={"name": "Reading"}, headers=headers)
     with cast(FastAPI, client.app).state.database.connect() as connection:
         total = connection.execute("SELECT COUNT(*) FROM jobs").fetchone()[0]
-    assert total == 0
+        assert total == 0
+
+
+def test_delete_rolls_back_when_cleanup_job_cannot_be_written(
+    authenticated: tuple[TestClient, str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    client, csrf = authenticated
+    collection_id = client.post(
+        "/collections", json={"name": "Books"}, headers={"X-CSRF-Token": csrf}
+    ).json()["id"]
+
+    def fail_id(_size: int) -> str:
+        raise RuntimeError("simulated job ID failure")
+
+    monkeypatch.setattr("recoll_modern.storage.jobs.secrets.token_hex", fail_id)
+    with pytest.raises(RuntimeError, match="simulated job ID failure"):
+        client.delete(
+            f"/collections/{collection_id}", params={"confirmation": "Books"},
+            headers={"X-CSRF-Token": csrf},
+        )
+    assert client.get(f"/collections/{collection_id}").status_code == 200

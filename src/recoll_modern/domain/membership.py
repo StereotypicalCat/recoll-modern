@@ -57,7 +57,7 @@ class MembershipService:
         }
         for source, report in discovered:
             if source.type == "directory" and source.mode == "persistent":
-                rule = self._memberships.create_rule(
+                rule = self._memberships.ensure_rule(
                     collection_id,
                     self._policy.normalize(source.path),
                     tuple(self._policy.normalize(path) for path in source.excluded_directories),

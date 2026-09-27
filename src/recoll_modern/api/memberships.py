@@ -74,14 +74,18 @@ def remove_document(
 
 
 @router.get("/collections/{collection_id}/directory-rules")
-def list_rules(collection_id: str, request: Request) -> dict[str, object]:
+def list_rules(
+    collection_id: str, request: Request, limit: int = 50, offset: int = 0
+) -> dict[str, object]:
     require_user(request)
     request.app.state.collections.get(collection_id)
+    if not 1 <= limit <= 200 or offset < 0:
+        raise AppError("validation_failed", "Invalid pagination", 422)
     rules = [
         asdict(rule) for rule in request.app.state.memberships.list_rules()
         if rule.collection_id == collection_id
     ]
-    return {"items": rules, "total": len(rules)}
+    return {"items": rules[offset:offset + limit], "total": len(rules)}
 
 
 @router.patch("/collections/{collection_id}/directory-rules/{rule_id}", status_code=202)

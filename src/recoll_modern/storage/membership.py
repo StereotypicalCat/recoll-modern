@@ -46,6 +46,26 @@ class MembershipRepository:
                 raise
             return DirectoryRule(rule_id, collection_id, relative_path, excluded_directories)
 
+    def ensure_rule(
+        self, collection_id: str, relative_path: str, excluded_directories: tuple[str, ...]
+    ) -> DirectoryRule:
+        """Replay a persistent source without creating a duplicate rule."""
+        with self._database.connect() as connection:
+            row = connection.execute(
+                "SELECT id FROM directory_rules WHERE collection_id = ? AND relative_path = ?",
+                (collection_id, relative_path),
+            ).fetchone()
+        if row is None:
+            return self.create_rule(collection_id, relative_path, excluded_directories)
+        rule_id = str(row[0])
+        rule = self.get_rule(rule_id)
+        assert rule is not None
+        if rule.excluded_directories != excluded_directories:
+            self.patch_rule(rule_id, excluded_directories)
+            rule = self.get_rule(rule_id)
+            assert rule is not None
+        return rule
+
     def get_rule(self, rule_id: str) -> DirectoryRule | None:
         with self._database.connect() as connection:
             row = connection.execute(

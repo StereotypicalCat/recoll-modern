@@ -74,13 +74,10 @@ class TestRecollEngine(EngineContract):
         if config is None:
             if os.environ.get("RECOLL_MODERN_REQUIRE_DOCKER") != "1":
                 pytest.skip("Recoll test container is not running")
-            corpus_file = os.environ.get("RECOLL_MODERN_TEST_CORPUS_FILE")
-            if corpus_file is None:
-                pytest.fail("RECOLL_MODERN_TEST_CORPUS_FILE is required for container contract")
             bootstrap = subprocess.run(
                 ["docker", "compose", "exec", "-T", "app", "recollindex", "-c",
                  "/var/lib/recoll-modern/recoll-config", "-i", "-Z",
-                 f"/documents/{corpus_file}"],
+                 "/documents"],
                 capture_output=True, text=True, check=False, timeout=30,
             )
             assert bootstrap.returncode == 0, bootstrap.stderr

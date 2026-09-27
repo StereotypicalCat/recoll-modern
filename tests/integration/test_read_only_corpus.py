@@ -3,7 +3,9 @@
 import os
 import subprocess
 import time
+import uuid
 from collections.abc import Callable
+from pathlib import Path
 
 import httpx
 import pytest
@@ -21,7 +23,14 @@ def test_generated_corpus_indexes_and_searches(
 ) -> None:
     corpus_file = os.environ.get("RECOLL_MODERN_TEST_CORPUS_FILE")
     if corpus_file is None:
-        pytest.skip("Set RECOLL_MODERN_TEST_CORPUS_FILE for generated-corpus verification")
+        document_root = os.environ.get("RECOLL_MODERN_DOCUMENTS")
+        if document_root is None:
+            pytest.fail("RECOLL_MODERN_DOCUMENTS is required for generated-corpus verification")
+        relative = Path(f"recoll-modern-test-{uuid.uuid4().hex}") / "probe.txt"
+        file = Path(document_root) / relative
+        file.parent.mkdir(parents=True)
+        file.write_text("Unique zebraplatypus integration corpus.\n")
+        corpus_file = relative.as_posix()
     assert compose_exec(["test", "-f", f"/documents/{corpus_file}"]).returncode == 0
     port = os.environ.get("RECOLL_MODERN_PUBLISH_PORT", "8000")
     username = os.environ["RECOLL_MODERN_ADMIN_USERNAME"]

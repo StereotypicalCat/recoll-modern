@@ -78,9 +78,8 @@ def delete_collection(
     collection = request.app.state.collections.get(collection_id)
     if confirmation != collection.name:
         raise AppError("confirmation_required", "Collection name confirmation is required", 409)
-    paths = request.app.state.collections.delete(collection_id)
-    job = request.app.state.jobs.enqueue(
-        "collection_cleanup", {"version": 1, "paths": paths}, False
+    job = request.app.state.collection_repository.delete_with_cleanup(
+        collection_id, request.app.state.jobs
     )
     request.app.state.worker.notify()
     return {"job_id": job.id}

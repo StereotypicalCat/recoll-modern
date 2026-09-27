@@ -66,6 +66,14 @@ def create_app(settings: Settings | None = None, engine: Engine | None = None) -
             if paths:
                 engine.force_reindex(tuple(str(policy.root / path) for path in sorted(set(paths))))
 
+        def current_rule_paths(rule_id: str) -> tuple[str, ...]:
+            paths = []
+            for content_hash in memberships.rule_documents(rule_id):
+                record = documents.get(content_hash)
+                if record is not None and record.canonical_path is not None:
+                    paths.append(record.canonical_path)
+            return tuple(paths)
+
         def cleanup(job: Job) -> None:
             export_membership_map(map_rows, settings.membership_map_path)
             paths = job.request.get("paths", [])
@@ -98,26 +106,39 @@ def create_app(settings: Settings | None = None, engine: Engine | None = None) -
                 raise ValueError("invalid rule patch job")
             if not all(isinstance(item, str) for item in exclusions):
                 raise ValueError("invalid rule patch job")
+            replay_paths = jobs.record_reindex_paths(job.id, current_rule_paths(rule_id))
             result = membership_service.plan_patch_rule(rule_id, tuple(exclusions))
-            reindex_changed(result.changed_paths)
+            reindex_changed(tuple(set(replay_paths) | set(result.changed_paths)))
 
         def delete_rule(job: Job) -> None:
             rule_id = job.request.get("rule_id")
             if not isinstance(rule_id, str):
                 raise ValueError("invalid rule deletion job")
-            reindex_changed(membership_service.plan_delete_rule(rule_id))
+            replay_paths = jobs.record_reindex_paths(job.id, current_rule_paths(rule_id))
+            changed = membership_service.plan_delete_rule(rule_id)
+            reindex_changed(tuple(set(replay_paths) | set(changed)))
 
         def reindex(job: Job) -> None:
             paths = job.request.get("paths", [])
             collections_requested = job.request.get("collections", [])
             if not isinstance(paths, list) or not isinstance(collections_requested, list):
                 raise ValueError("invalid reindex job")
-            for rule in memberships.list_rules():
-                reconcile_rule(rule.id, policy, documents, memberships)
+            rules = memberships.list_rules()
+            prior_paths = tuple(
+                path for rule in rules for path in current_rule_paths(rule.id)
+            )
+            replay_paths = jobs.record_reindex_paths(job.id, prior_paths)
+            changed: set[str] = set()
+            for rule in rules:
+                changed.update(
+                    reconcile_rule(rule.id, policy, documents, memberships).changed_paths
+                )
             export_membership_map(map_rows, settings.membership_map_path)
             selected = {
                 str(policy.root / path) for path in paths if isinstance(path, str)
             }
+            selected.update(str(policy.root / path) for path in changed)
+            selected.update(str(policy.root / path) for path in replay_paths)
             requested_ids = {item for item in collections_requested if isinstance(item, str)}
             for path, ids in memberships.membership_map_rows(policy.root):
                 if requested_ids.intersection(ids):
@@ -144,7 +165,9 @@ def create_app(settings: Settings | None = None, engine: Engine | None = None) -
         app.state.auth = auth_service
         app.state.engine = engine
         app.state.path_policy = policy
-        app.state.collections = CollectionService(SQLiteCollectionRepository(database))
+        collection_repository = SQLiteCollectionRepository(database)
+        app.state.collections = CollectionService(collection_repository)
+        app.state.collection_repository = collection_repository
         app.state.memberships = memberships
         app.state.documents = documents
         app.state.jobs = jobs

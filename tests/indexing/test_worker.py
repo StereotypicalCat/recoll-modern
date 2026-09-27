@@ -48,10 +48,10 @@ async def test_worker_start_recovers_and_drains_queue(tmp_path: Path) -> None:
     database = Database(tmp_path / "state.sqlite3")
     database.migrate()
     jobs = JobRepository(database)
-    job = jobs.enqueue("test", {}, False)
+    job = jobs.enqueue("reindex", {"version": 1, "paths": [], "collections": []}, False)
     jobs.claim_next()
     handled: list[str] = []
-    worker = JobWorker(jobs, {"test": lambda claimed: handled.append(claimed.id)})
+    worker = JobWorker(jobs, {"reindex": lambda claimed: handled.append(claimed.id)})
     worker.start()
     for _ in range(100):
         current = jobs.get(job.id)

@@ -83,7 +83,9 @@ Only `engine/` may import Recoll or invoke `recollindex`. Membership jobs first 
 state in SQLite, atomically export the helper's `RCM1` flat map, then ask the engine to force-index
 affected canonical paths. Map records use length-prefixed absolute UTF-8 paths, so filenames can
 contain newlines. The C helper reads this private map without starting Python. Engine retries are
-therefore idempotent. Persistent directory rules reconcile at startup and on an explicit reindex,
+therefore idempotent. Jobs save paths needed for replay before changing rule membership, and collection
+deletion commits the cleanup job in the same SQLite transaction. Persistent directory rules reconcile
+at startup and on an explicit reindex, preserving prior membership for unreadable files or subtrees,
 not through live filesystem monitoring.
 
 ### Storage model
@@ -114,8 +116,9 @@ derives effective membership from SQLite and includes direct and rule provenance
 
 Search passes all requested collection IDs into one engine query, then verifies hit paths and effective
 membership in SQLite before returning them. Full-text and original-file routes resolve a live canonical
-path under the configured root. Original responses use range-capable `FileResponse`, with inline display
-limited to safe media types.
+path under the configured root. Original downloads open a contained regular file through no-follow
+directory descriptors and stream from the pinned descriptor, including single byte ranges; inline
+display is limited to safe media types.
 
 The image installs Recoll and its Python binding from Debian trixie, and syncs the application into a
 system-site-packages venv so the binding remains importable. A separate build stage compiles the C

@@ -3,6 +3,22 @@
 Append-only, newest first. Never edit or delete an entry — supersede it with a new one that links back.
 One entry per decision a future maintainer would otherwise have to reverse-engineer.
 
+## 2026-09-27 — Persist replay paths and pin original downloads
+**Status:** accepted
+**Context:** Review found that a job could mutate rule or collection state before its indexing step
+failed, leaving a retry without the old paths. `FileResponse` also reopened a path after containment
+checking, allowing a concurrent host-side symlink swap.
+**Decision:** persist affected paths in a running job before rule mutations; enqueue collection cleanup
+atomically with collection deletion. Open original files beneath the document root with no-follow
+directory descriptors and stream from that checked descriptor, including byte-range responses.
+**Alternatives:** recompute old paths on retry (the database may already have lost them); retain
+`FileResponse` after a path-only check (it reopens the path).
+**Consequences:** interrupted jobs retain their required reindex paths. File responses are tied to an
+opened regular file even if directory entries change later. The descriptor traversal relies on Linux
+`openat` semantics supplied by the current Docker deployment; desktop packaging must revisit it.
+
+---
+
 ## 2026-09-18 — Cross-platform desktop packaging is spec 005
 **Status:** accepted
 **Supersedes:** "The product is four specs, built in order" (below, same date), only by appending a fifth

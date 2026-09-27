@@ -7,6 +7,7 @@ import secrets
 import sqlite3
 from collections.abc import Mapping
 from datetime import UTC, datetime
+from sqlite3 import Connection
 
 from recoll_modern.domain.jobs import Job, JobFileError, JobState
 from recoll_modern.storage.database import Database
@@ -19,25 +20,32 @@ class JobRepository:
     def enqueue(
         self, kind: str, request: Mapping[str, object], fail_on_file_error: bool
     ) -> Job:
+        with self._database.transaction() as connection:
+            return self.enqueue_in_transaction(connection, kind, request, fail_on_file_error)
+
+    def enqueue_in_transaction(
+        self, connection: Connection, kind: str, request: Mapping[str, object],
+        fail_on_file_error: bool,
+    ) -> Job:
+        """Write a job in a caller-owned transaction when state and work must be atomic."""
         serialized = json.dumps(dict(request), sort_keys=True)
         now = datetime.now(UTC).isoformat()
         while True:
             job_id = f"j{secrets.token_hex(16)}"
             try:
-                with self._database.transaction() as connection:
-                    connection.execute(
-                        "INSERT INTO jobs "
-                        "(id, kind, state, request_json, fail_on_file_error, created_at) "
-                        "VALUES (?, ?, 'queued', ?, ?, ?)",
-                        (job_id, kind, serialized, int(fail_on_file_error), now),
-                    )
+                connection.execute(
+                    "INSERT INTO jobs "
+                    "(id, kind, state, request_json, fail_on_file_error, created_at) "
+                    "VALUES (?, ?, 'queued', ?, ?, ?)",
+                    (job_id, kind, serialized, int(fail_on_file_error), now),
+                )
             except sqlite3.IntegrityError as error:
                 if "jobs.id" in str(error):
                     continue
                 raise
-            job = self.get(job_id)
-            assert job is not None
-            return job
+            return Job(
+                job_id, kind, JobState.QUEUED, dict(request), fail_on_file_error, 0, 0
+            )
 
     def get(self, job_id: str) -> Job | None:
         with self._database.connect() as connection:
@@ -98,6 +106,26 @@ class JobRepository:
                 )
             ]
 
+    def record_reindex_paths(self, job_id: str, paths: tuple[str, ...]) -> tuple[str, ...]:
+        """Write paths ahead of a destructive membership mutation for replay."""
+        with self._database.transaction() as connection:
+            row = connection.execute(
+                "SELECT request_json FROM jobs WHERE id = ? AND state = 'running'", (job_id,)
+            ).fetchone()
+            if row is None:
+                raise ValueError("job is not running")
+            request = json.loads(str(row[0]))
+            prior = request.get("reindex_paths", [])
+            if not isinstance(prior, list) or not all(isinstance(item, str) for item in prior):
+                raise ValueError("invalid replay paths")
+            combined = tuple(sorted(set(prior) | set(paths)))
+            request["reindex_paths"] = list(combined)
+            connection.execute(
+                "UPDATE jobs SET request_json = ? WHERE id = ?",
+                (json.dumps(request, sort_keys=True), job_id),
+            )
+            return combined
+
     def complete(self, job_id: str, *, with_errors: bool = False) -> None:
         state = "completed_with_errors" if with_errors else "completed"
         with self._database.transaction() as connection:
@@ -156,11 +184,49 @@ def _valid_request(kind: str, raw: str) -> bool:
         return False
     if not isinstance(value, dict):
         return False
+    if value.get("version") != 1:
+        return False
+    replay_paths = value.get("reindex_paths", [])
+    if not _string_list(replay_paths):
+        return False
     if kind == "membership_add":
+        sources = value.get("sources")
+        if not isinstance(value.get("collection_id"), str) or not isinstance(sources, list):
+            return False
+        return all(_valid_source(source) for source in sources)
+    if kind == "membership_remove":
         return isinstance(value.get("collection_id"), str) and isinstance(
-            value.get("sources"), list
+            value.get("document_hash"), str
         )
-    return bool(kind)
+    if kind == "rule_patch":
+        return isinstance(value.get("rule_id"), str) and _string_list(
+            value.get("excluded_directories")
+        )
+    if kind == "rule_delete":
+        return isinstance(value.get("rule_id"), str)
+    if kind == "collection_cleanup":
+        return _string_list(value.get("paths"))
+    if kind == "reindex":
+        return _string_list(value.get("paths")) and _string_list(value.get("collections"))
+    if kind == "reconcile_rules":
+        return True
+    return False
+
+
+def _string_list(value: object) -> bool:
+    return isinstance(value, list) and all(isinstance(item, str) for item in value)
+
+
+def _valid_source(value: object) -> bool:
+    if not isinstance(value, dict) or not isinstance(value.get("path"), str):
+        return False
+    if value.get("type") == "file":
+        return True
+    if value.get("type") == "directory":
+        return value.get("mode") in ("snapshot", "persistent") and _string_list(
+            value.get("excluded_directories", [])
+        )
+    return False
 
 
 def _job_from_row(row: sqlite3.Row) -> Job:

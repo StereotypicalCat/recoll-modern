@@ -2,6 +2,8 @@ import time
 from pathlib import Path
 from typing import cast
 
+import pytest
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 
@@ -177,3 +179,90 @@ def test_remove_document_creates_override_then_direct_add_restores_it(
     assert len(members) == 1
     assert members[0]["direct"] is True
     assert members[0]["override"] is False
+
+
+def test_rule_deletion_retry_reindexes_removed_membership(
+    authenticated: tuple[TestClient, str], tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    client, csrf = authenticated
+    books = tmp_path / "docs" / "books"
+    books.mkdir()
+    file = books / "a.txt"
+    file.write_text("book")
+    collection_id = _collection(client, csrf)
+    created = client.post(
+        f"/collections/{collection_id}/memberships",
+        headers={"X-CSRF-Token": csrf},
+        json={"sources": [{"type": "directory", "path": "books", "mode": "persistent"}]},
+    )
+    assert _wait(client, created.json()["job"]["id"])["state"] == "completed"
+    rule_id = client.get(f"/collections/{collection_id}/directory-rules").json()["items"][0]["id"]
+    engine = cast(FastAPI, client.app).state.engine
+    original = engine.force_reindex
+    calls: list[tuple[str, ...]] = []
+
+    def fail_once(paths: tuple[str, ...]) -> None:
+        calls.append(paths)
+        if len(calls) == 1:
+            raise RuntimeError("simulated indexing failure")
+        original(paths)
+
+    monkeypatch.setattr(engine, "force_reindex", fail_once)
+    deleted = client.delete(
+        f"/collections/{collection_id}/directory-rules/{rule_id}",
+        headers={"X-CSRF-Token": csrf},
+    )
+    job_id = deleted.json()["job"]["id"]
+    assert _wait(client, job_id)["state"] == "failed"
+    retried = client.post(f"/jobs/{job_id}/retry", headers={"X-CSRF-Token": csrf})
+    assert retried.status_code == 202
+    assert _wait(client, job_id)["state"] == "completed"
+    assert calls == [(str(file),), (str(file),)]
+
+
+def test_rule_patch_retry_reindexes_excluded_member(
+    authenticated: tuple[TestClient, str], tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    client, csrf = authenticated
+    skipped = tmp_path / "docs" / "books" / "skip"
+    skipped.mkdir(parents=True)
+    file = skipped / "a.txt"
+    file.write_text("book")
+    collection_id = _collection(client, csrf)
+    created = client.post(
+        f"/collections/{collection_id}/memberships",
+        headers={"X-CSRF-Token": csrf},
+        json={"sources": [{"type": "directory", "path": "books", "mode": "persistent"}]},
+    )
+    assert _wait(client, created.json()["job"]["id"])["state"] == "completed"
+    rule_id = client.get(f"/collections/{collection_id}/directory-rules").json()["items"][0]["id"]
+    engine = cast(FastAPI, client.app).state.engine
+    original = engine.force_reindex
+    calls: list[tuple[str, ...]] = []
+
+    def fail_once(paths: tuple[str, ...]) -> None:
+        calls.append(paths)
+        if len(calls) == 1:
+            raise RuntimeError("simulated indexing failure")
+        original(paths)
+
+    monkeypatch.setattr(engine, "force_reindex", fail_once)
+    patched = client.patch(
+        f"/collections/{collection_id}/directory-rules/{rule_id}",
+        headers={"X-CSRF-Token": csrf}, json={"excluded_directories": ["books/skip"]},
+    )
+    job_id = patched.json()["job"]["id"]
+    assert _wait(client, job_id)["state"] == "failed"
+    client.post(f"/jobs/{job_id}/retry", headers={"X-CSRF-Token": csrf})
+    assert _wait(client, job_id)["state"] == "completed"
+    assert calls == [(str(file),), (str(file),)]
+
+
+def test_rule_list_validates_pagination(authenticated: tuple[TestClient, str]) -> None:
+    client, csrf = authenticated
+    collection_id = _collection(client, csrf)
+    response = client.get(
+        f"/collections/{collection_id}/directory-rules", params={"limit": 201}
+    )
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "validation_failed"

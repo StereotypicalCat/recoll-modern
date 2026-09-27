@@ -5,11 +5,14 @@ from __future__ import annotations
 import secrets
 import sqlite3
 from datetime import UTC, datetime
+from sqlite3 import Connection
 
 from recoll_modern.domain.collections import CollectionPage, CollectionPaths, normalize_name
 from recoll_modern.domain.errors import AppError
+from recoll_modern.domain.jobs import Job
 from recoll_modern.domain.models import Collection, CollectionCreate, CollectionPatch, _Unset
 from recoll_modern.storage.database import Database
+from recoll_modern.storage.jobs import JobRepository
 
 
 class SQLiteCollectionRepository:
@@ -113,32 +116,47 @@ class SQLiteCollectionRepository:
     def delete(self, collection_id: str) -> CollectionPaths:
         """Return effective canonical paths before SQLite cascades memberships away."""
         with self._database.transaction() as connection:
-            paths = [
-                str(row[0])
-                for row in connection.execute(
-                    "SELECT DISTINCT paths.relative_path "
-                    "FROM document_paths AS paths "
-                    "JOIN ("
-                    "  SELECT direct.document_hash "
-                    "  FROM direct_memberships AS direct "
-                    "  WHERE direct.collection_id = ? "
-                    "  UNION "
-                    "  SELECT rule_memberships.document_hash "
-                    "  FROM rule_memberships "
-                    "  JOIN directory_rules AS rules ON rules.id = rule_memberships.rule_id "
-                    "  WHERE rules.collection_id = ? "
-                    "    AND NOT EXISTS ("
-                    "      SELECT 1 FROM membership_exclusions AS exclusions "
-                    "      WHERE exclusions.collection_id = rules.collection_id "
-                    "        AND exclusions.document_hash = rule_memberships.document_hash"
-                    "    )"
-                    ") AS members ON members.document_hash = paths.document_hash "
-                    "WHERE paths.is_canonical = 1 "
-                    "ORDER BY paths.relative_path",
-                    (collection_id, collection_id),
-                )
-            ]
-            connection.execute("DELETE FROM collections WHERE id = ?", (collection_id,))
+            return self._delete_in_transaction(connection, collection_id)
+
+    def delete_with_cleanup(self, collection_id: str, jobs: JobRepository) -> Job:
+        """Delete metadata and queue its index cleanup in one durable transaction."""
+        with self._database.transaction() as connection:
+            paths = self._delete_in_transaction(connection, collection_id)
+            return jobs.enqueue_in_transaction(
+                connection, "collection_cleanup", {"version": 1, "paths": paths}, False
+            )
+
+    def _delete_in_transaction(
+        self, connection: Connection, collection_id: str
+    ) -> CollectionPaths:
+        paths = [
+            str(row[0])
+            for row in connection.execute(
+                "SELECT DISTINCT paths.relative_path "
+                "FROM document_paths AS paths "
+                "JOIN ("
+                "  SELECT direct.document_hash "
+                "  FROM direct_memberships AS direct "
+                "  WHERE direct.collection_id = ? "
+                "  UNION "
+                "  SELECT rule_memberships.document_hash "
+                "  FROM rule_memberships "
+                "  JOIN directory_rules AS rules ON rules.id = rule_memberships.rule_id "
+                "  WHERE rules.collection_id = ? "
+                "    AND NOT EXISTS ("
+                "      SELECT 1 FROM membership_exclusions AS exclusions "
+                "      WHERE exclusions.collection_id = rules.collection_id "
+                "        AND exclusions.document_hash = rule_memberships.document_hash"
+                "    )"
+                ") AS members ON members.document_hash = paths.document_hash "
+                "WHERE paths.is_canonical = 1 "
+                "ORDER BY paths.relative_path",
+                (collection_id, collection_id),
+            )
+        ]
+        deleted = connection.execute("DELETE FROM collections WHERE id = ?", (collection_id,))
+        if deleted.rowcount != 1:
+            raise _collection_not_found()
         return paths
 
 

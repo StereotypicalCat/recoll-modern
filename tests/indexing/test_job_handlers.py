@@ -89,3 +89,36 @@ def test_handler_exports_map_before_forced_reindex(tmp_path: Path) -> None:
     handler.handle(claimed)
     assert calls == [(str(root / "good.txt"),)]
     assert jobs.get(job.id).state == JobState.COMPLETED  # type: ignore[union-attr]
+
+
+def test_persistent_source_replays_after_index_failure(tmp_path: Path) -> None:
+    root, jobs, membership, _, collection_id = _setup(tmp_path)
+    (root / "books").mkdir()
+    (root / "books" / "a.txt").write_text("book")
+    forced: list[tuple[str, ...]] = []
+
+    class FlakyIndexer:
+        def force_reindex(self, paths: tuple[str, ...]) -> None:
+            forced.append(paths)
+            if len(forced) == 1:
+                raise RuntimeError("simulated index failure")
+
+    handler = MembershipJobHandler(
+        PathPolicy(root), DocumentRepository(Database(tmp_path / "state.sqlite3")),
+        membership, jobs, tmp_path / "membership.map", FlakyIndexer(),
+    )
+    job = jobs.enqueue("membership_add", {
+        "version": 1, "collection_id": collection_id,
+        "sources": [{"type": "directory", "path": "books", "mode": "persistent",
+                     "excluded_directories": []}],
+    }, False)
+    claimed = jobs.claim_next()
+    assert claimed is not None
+    try:
+        handler.handle(claimed)
+    except RuntimeError:
+        pass
+    assert len(membership.list_rules()) == 1
+    handler.handle(claimed)
+    assert jobs.get(job.id).state == JobState.COMPLETED  # type: ignore[union-attr]
+    assert forced == [(str(root / "books" / "a.txt"),)] * 2

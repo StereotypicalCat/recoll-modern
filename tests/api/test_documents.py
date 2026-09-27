@@ -34,6 +34,8 @@ def test_text_and_byte_range(authenticated: tuple[TestClient, str], tmp_path: Pa
     assert client.get(
         f"/documents/{digest}/file", headers={"Range": "bytes=99-100"}
     ).status_code == 416
+    suffix = client.get(f"/documents/{digest}/file", headers={"Range": "bytes=-2"})
+    assert suffix.status_code == 206 and suffix.content == b"ef"
 
 
 def test_unknown_and_missing_documents(
