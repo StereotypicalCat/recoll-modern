@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Status:** approved 2026-09-18
+**Status:** done 2026-09-28 (approved 2026-09-18)
 
 **Goal:** Build the authenticated, collection-scoped Recoll service defined by spec 001, including durable membership/indexing jobs, document retrieval, and its Docker deployment.
 

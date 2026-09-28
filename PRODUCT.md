@@ -12,9 +12,9 @@ web
 
 ## Stack
 
-The backend stack was confirmed during the 001 design: Python + FastAPI, managed with `uv`, because
-Recoll provides native Python bindings. The frontend stack remains undecided. No application has been
-scaffolded yet. See `docs/DECISIONS.md` for the decision and `AGENTS.md` for installed toolchains.
+The backend stack was confirmed during the 001 design and implemented: Python + FastAPI, managed with
+`uv`, because Recoll provides native Python bindings. The frontend stack remains undecided, and no web
+UI has been built. See `docs/DECISIONS.md` for the decision and `AGENTS.md` for installed toolchains.
 
 ## Users
 
@@ -50,8 +50,9 @@ Confirmed from the brief:
 - Web UI, served from a Docker deployment.
 - MCP server exposing the same search capability.
 
-Explicitly undecided: authentication, cross-collection search, indexing schedule, result preview depth,
-supported document types beyond Recoll's own. See `docs/ARCHITECTURE.md` for the full list.
+Spec 001 settled authentication, cross-collection search, indexing triggers, and API result fields.
+UI presentation and filter coverage beyond the shipped container remain undecided. See
+`docs/ARCHITECTURE.md` for the implemented shape.
 
 ## Brand Commitments
 

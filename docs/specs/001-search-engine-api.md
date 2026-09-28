@@ -1,5 +1,5 @@
 ---
-status: approved
+status: implemented
 plan: docs/plans/001-search-engine-api.md
 supersedes: none
 ---
