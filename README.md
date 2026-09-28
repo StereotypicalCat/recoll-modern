@@ -44,6 +44,7 @@ RECOLL_MODERN_ADMIN_PASSWORD=use-a-long-unique-password
 RECOLL_MODERN_IMAGE=gitea.lucaswinther.info/lucasw89/recoll-modern:main
 EOF
 docker compose -f compose.published.yaml pull
+sudo install -d -m 0700 -o 10001 -g 10001 data/service-state data/recoll-index
 docker compose -f compose.published.yaml up -d --no-build
 docker compose -f compose.published.yaml ps
 docker compose -f compose.published.yaml logs -f app
@@ -54,8 +55,8 @@ Once a version appears in Gitea Packages, edit `RECOLL_MODERN_IMAGE` in `.env` t
 `RECOLL_MODERN_IMAGE` to use `:latest` after the first version tag is published. The image is published
 only after the CI checks pass; a tag that has not been published cannot be pulled. To update, set the
 desired tag and run `docker compose -f compose.published.yaml pull` followed
-by `docker compose -f compose.published.yaml up -d --no-build` again. Keep the same Compose project
-directory so its named volumes are reused.
+by `docker compose -f compose.published.yaml up -d --no-build` again. Keep the same Compose file
+directory so the local data paths are reused.
 
 For a trusted local HTTP trial with `docker run`, export the settings for that shell:
 
@@ -65,13 +66,14 @@ export RECOLL_MODERN_ADMIN_USERNAME=admin
 export RECOLL_MODERN_ADMIN_PASSWORD='use-a-long-unique-password'
 export RECOLL_MODERN_IMAGE=gitea.lucaswinther.info/lucasw89/recoll-modern:main
 docker pull "$RECOLL_MODERN_IMAGE"
+sudo install -d -m 0700 -o 10001 -g 10001 data/service-state data/recoll-index
 docker run -d --name recoll-modern --restart unless-stopped -p 127.0.0.1:8000:8000 \
   -e RECOLL_MODERN_ADMIN_USERNAME -e RECOLL_MODERN_ADMIN_PASSWORD \
   -e RECOLL_MODERN_HOST=0.0.0.0 -e RECOLL_MODERN_PORT=8000 \
   -e RECOLL_MODERN_DEVELOPMENT_MODE=true \
   --mount "type=bind,src=$RECOLL_MODERN_DOCUMENTS,dst=/documents,readonly" \
-  --mount type=volume,src=recoll-modern-service-state,dst=/var/lib/recoll-modern \
-  --mount type=volume,src=recoll-modern-index,dst=/var/lib/recoll \
+  --mount "type=bind,src=$PWD/data/service-state,dst=/var/lib/recoll-modern" \
+  --mount "type=bind,src=$PWD/data/recoll-index,dst=/var/lib/recoll" \
   "$RECOLL_MODERN_IMAGE"
 ```
 
@@ -88,19 +90,21 @@ docker compose up -d --build
 
 The service listens on host port 8000 by default; set `RECOLL_MODERN_PUBLISH_PORT` to change it. The
 document directory is mounted read-only. SQLite, the membership map and generated Recoll configuration
-live in the `service-state` volume; the index lives in the separate `recoll-index` volume. Back up both
-volumes together and keep a separate copy of the documents. `docker compose down` preserves the volumes;
-never pass `-v` unless you intentionally want to delete the index and service state.
+live in `./data/service-state`; the index lives in `./data/recoll-index`, relative to the Compose file
+directory. Both directories must be writable by container UID/GID `10001:10001`; create them with the
+command above before starting either deployment. Back up both directories together and keep a separate
+copy of the documents. Container replacement does not delete these bind-mounted directories. If you
+already deployed with the earlier named volumes, copy both volumes' contents into these directories
+while the old container is stopped, preserving ownership, before starting the new configuration. Do not
+start against empty directories in place of existing data.
 
-For the direct `docker run` example, the volumes are named `recoll-modern-service-state` and
-`recoll-modern-index`. Back up both together. Replacing a container does not delete these volumes.
-
-On first boot, the API is available but `/health` may return 503 until a membership or reindex job has
-built the first Recoll index. Log in through `POST /auth/login`, create a collection, then add file or
-directory sources through `POST /collections/{id}/memberships`. Mutations return a durable job ID;
-inspect `GET /jobs/{id}` for completion or file errors. `POST /jobs/reindex` refreshes the index without
-deleting it. The login seed applies only when no administrator exists; changing the environment value
-later does not rotate an existing password. Protect and back up the service-state volume.
+On first boot, the API is available but `/health` can return 503 with a Recoll database-open error until
+a membership or reindex job has built the first index. Log in through `POST /auth/login`, create a
+collection, then add file or directory sources through `POST /collections/{id}/memberships`. Mutations
+return a durable job ID; inspect `GET /jobs/{id}` for completion or file errors. `POST /jobs/reindex`
+refreshes the index without deleting it. The login seed applies only when no administrator exists;
+changing the environment value later does not rotate an existing password. Protect and back up
+`./data/service-state`.
 
 Production sessions use Secure cookies, so serve the API over HTTPS. For a trusted local HTTP trial,
 set `RECOLL_MODERN_DEVELOPMENT_MODE=true`; do not use that setting on a public endpoint. Set

@@ -30,7 +30,7 @@ web UI and (b) an MCP server, running in Docker, with several independent collec
 | `src/recoll_modern/indexing/handlers.py` | Scans membership sources before strict-mode mutations and records file errors |
 | `src/recoll_modern/indexing/map_export.py` | Writes a durable atomic map from canonical paths to opaque collection IDs |
 | `helper/` | C reader run by Recoll's `metadatacmds` for each indexed file |
-| `Dockerfile`, `compose.yaml`, `docker/` | Non-root Recoll runtime, read-only document mount, persistent state/index volumes and config templates |
+| `Dockerfile`, `compose.yaml`, `docker/` | Non-root Recoll runtime, read-only document mount, persistent local state/index directories and config templates |
 | `compose.published.yaml` | Pull-only deployment with the same runtime settings and persistent mounts |
 | `.gitea/workflows/image.yaml`, `scripts/image_tags.py`, `scripts/publish_image.sh` | CI checks and Gitea registry publication; Git refs select published tags |
 | `src/recoll_modern/engine/` | Shared Protocol, deterministic fake, and isolated Recoll Python/indexer adapter |
@@ -65,7 +65,7 @@ future distribution track and starts only after the hosted product through 004 i
 - A Python service owns Recoll through its native Python bindings (`from recoll import recoll`).
 - SQLite holds collections, membership, indexing jobs, users and sessions.
 - An HTTP API consumed by both the web UI and the MCP server, so the two never diverge.
-- A Docker image containing Recoll itself, plus compose wiring for document volumes and index storage.
+- A Docker image containing Recoll itself, plus compose wiring for read-only documents and local index storage.
 - A packaging seam for a future desktop shell: application logic does not depend on Docker, state paths
   and listen addresses are configurable, process startup/shutdown is explicit, and every UI operation
   crosses the same HTTP API. Docker remains the only supported distribution through spec 004.
@@ -129,9 +129,9 @@ display is limited to safe media types.
 The image installs Debian trixie's headless `recollcmd` package and Python binding.
 It syncs the application into a system-site-packages venv so the binding remains
 importable. A separate build stage compiles the C helper. The non-root process
-copies Recoll config templates into the persistent state volume only when absent;
+copies Recoll config templates into the persistent state directory only when absent;
 Recoll may generate additional support files there. Compose mounts documents
-read-only and keeps the SQLite/config and Xapian index volumes separate. Initial
+read-only and keeps the SQLite/config and Xapian index bind mounts separate. Initial
 health can be 503 until an indexing job creates the first index.
 
 Gitea Actions tests and builds on pull requests, main pushes and version tags. A dependent job publishes
@@ -207,8 +207,8 @@ semantics and test strategy — are closed in the approved `docs/specs/001-searc
 |---|---|
 | Recoll (in-container) | All indexing and search. Not installed on the host — see `AGENTS.md` Rules. |
 | Docker + compose | The only supported way to run the service. |
-| Document volumes | Nothing to index; collections resolve to empty. |
-| A writable volume for the index and SQLite | All state. The document volume itself may be mounted read-only. |
+| Document bind mount | Nothing to index; collections resolve to empty. |
+| Writable local directories for the index and SQLite | All state. The document directory itself may be mounted read-only. |
 
 Docker is the only supported deployment for specs 001–004, not a permanent application-layer
 dependency. Spec 005 will design cross-platform packaging of the web UI, API service, Recoll and its

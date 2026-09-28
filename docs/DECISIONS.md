@@ -442,3 +442,18 @@ layers. A split-package probe still produced a 253 MB compressed layer.
 **Consequences:** the service remains headless. The full image's largest compressed layer is 39.02 MB,
 and a local container confirms both Recoll commands and the Python binding are present. Registry
 publishing and pulling still require a successful Gitea Actions run.
+
+---
+
+## 2026-09-28 — Keep Docker state beside the Compose file
+**Status:** accepted
+**Context:** named Docker volumes hide the index and service database from operators managing a
+deployment from its Compose directory. The non-root container needs writable state owned by UID/GID
+`10001:10001`.
+**Decision:** both Compose variants bind-mount `./data/service-state` and `./data/recoll-index`.
+The direct `docker run` example uses the same local directories. Ignore `data/` in Git and require
+operators to create the directories with the container's ownership before startup.
+**Alternatives:** retain Docker-managed named volumes and require volume-specific backup commands.
+**Consequences:** moving the Compose file changes the resolved data paths. Existing named-volume
+deployments must copy both stores into the local directories before switching mounts; neither store
+is deleted or rebuilt by this change.
