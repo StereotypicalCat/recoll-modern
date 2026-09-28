@@ -126,12 +126,13 @@ path under the configured root. Original downloads open a contained regular file
 directory descriptors and stream from the pinned descriptor, including single byte ranges; inline
 display is limited to safe media types.
 
-The image installs Recoll and its Python binding from Debian trixie, and syncs the application into a
-system-site-packages venv so the binding remains importable. A separate build stage compiles the C
-helper. The non-root process copies Recoll config templates into the persistent state volume only when
-absent; Recoll may generate additional support files there. Compose mounts documents read-only and
-keeps the SQLite/config and Xapian index volumes separate. Initial health can be 503 until an indexing
-job creates the first index.
+The image installs Debian trixie's headless `recollcmd` package and Python binding.
+It syncs the application into a system-site-packages venv so the binding remains
+importable. A separate build stage compiles the C helper. The non-root process
+copies Recoll config templates into the persistent state volume only when absent;
+Recoll may generate additional support files there. Compose mounts documents
+read-only and keeps the SQLite/config and Xapian index volumes separate. Initial
+health can be 503 until an indexing job creates the first index.
 
 Gitea Actions tests and builds on pull requests, main pushes and version tags. A dependent job publishes
 `linux/amd64` images only for main and full `vX.Y.Z` tags. `main` follows the branch; `latest` follows

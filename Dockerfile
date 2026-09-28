@@ -10,7 +10,7 @@ FROM ghcr.io/astral-sh/uv:0.12.16 AS uv-bin
 FROM debian:trixie-slim
 COPY --from=uv-bin /uv /usr/local/bin/uv
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    ca-certificates python3 python3-recoll recoll poppler-utils python3-lxml unzip \
+    ca-certificates python3 python3-recoll recollcmd poppler-utils python3-lxml unzip \
     && rm -rf /var/lib/apt/lists/*
 COPY --from=helper-build /build/recoll-membership /usr/local/bin/recoll-membership
 WORKDIR /app
@@ -25,7 +25,8 @@ ENV VIRTUAL_ENV=/opt/venv \
     RECOLL_MODERN_STATE_ROOT=/var/lib/recoll-modern \
     RECOLL_MODERN_RECOLL_CONFIG_DIR=/var/lib/recoll-modern/recoll-config \
     RECOLL_MODERN_MEMBERSHIP_MAP=/var/lib/recoll-modern/membership.map
-RUN uv sync --locked --no-dev && python -c 'from recoll import recoll'
+RUN uv sync --locked --no-dev && python -c 'from recoll import recoll' \
+    && command -v recollindex && command -v recollq
 COPY docker/recoll.conf docker/fields /etc/recoll-modern/
 COPY docker/entrypoint.sh /usr/local/bin/recoll-modern-entrypoint
 RUN chmod 755 /usr/local/bin/recoll-modern-entrypoint \

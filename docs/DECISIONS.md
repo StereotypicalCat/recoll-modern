@@ -426,3 +426,19 @@ raises an internal-file error.
 **Alternatives:** catch the generic extraction error, which would hide genuine extraction failures.
 **Consequences:** exact-path text lookup follows the engine contract for missing documents while real
 extraction failures still surface as `engine_unavailable`.
+
+---
+
+## 2026-09-28 — Install headless Recoll command package in the published image
+**Status:** accepted
+**Context:** Gitea's registry is behind Cloudflare's 100 MB request limit. The Docker image's Debian
+`recoll` metapackage pulled in `recollgui` and Qt WebEngine, producing a 273 MB compressed layer. The
+registry rejected that layer with HTTP 413, so no image manifest was published.
+**Decision:** install Debian's `recollcmd` package instead. It supplies `recollindex` and `recollq`
+without the unused graphical interface. Keep the Python binding and document filters, and check the
+command binaries during the image build.
+**Alternatives:** bypass Cloudflare for registry uploads; split the same GUI dependencies across Docker
+layers. A split-package probe still produced a 253 MB compressed layer.
+**Consequences:** the service remains headless. The full image's largest compressed layer is 39.02 MB,
+and a local container confirms both Recoll commands and the Python binding are present. Registry
+publishing and pulling still require a successful Gitea Actions run.
