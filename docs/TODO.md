@@ -5,7 +5,7 @@ Small, specific, independently actionable. Remove only when actually done.
 
 ## Resume here
 
-Last touched 2026-09-27. Spec 001 implementation is in review closure.
+Last touched 2026-09-28. Spec 001 implementation has completed its review fixes and acceptance matrix.
 
 Where the workflow stands (`AGENTS.md` -> Workflow: brainstorm -> spec -> plan -> TDD -> review):
 
@@ -19,19 +19,20 @@ Where the workflow stands (`AGENTS.md` -> Workflow: brainstorm -> spec -> plan -
   identity, additive membership, durable jobs, the atomic membership map, the engine boundary,
   session authentication, the HTTP shell, membership/rule/job routes, scoped search and document
   retrieval, Docker packaging and acceptance coverage. Their checkboxes are current in the plan.
-  The first code review found replay, reconciliation, and download races. A fix checkpoint is on
-  `feat/001-document-discovery`; final verification and branch handoff remain.
+  The first code review found replay, reconciliation, and download races. A follow-up review found
+  generated documentation exposed without a session, incomplete unfiltered reindexing, stale tags
+  after an earlier duplicate became canonical, and lost membership on best-effort rule resubmission.
+  These are fixed on `feat/001-document-discovery`; branch handoff remains.
 
-The next action is Task 14 Step 6: run the full verification matrix, request a follow-up review of the
-fixes, then hand off the branch. Do not repeat Tasks 1–14. The review fixes include idempotent rule
-creation, persisted replay paths, atomic collection cleanup enqueue, unreadable-file preservation,
-departed-path reindexing, directory-rule pagination, recovery request validation, and descriptor-pinned
-downloads. The generated real-container lifecycle test covers these flows through Compose. Its 9-test
-contract/integration suite passed with `RECOLL_MODERN_REQUIRE_DOCKER=1` on 2026-09-27; the host suite
-passed with 157 passed and 4 skipped, and lint/type checking passed. The complete final matrix and
-follow-up review still need to run before completion. Docker Compose may be running on
-port 9124 with `RECOLL_MODERN_DOCUMENTS=/tmp/recoll-modern-corpus`; preserve its named volumes and
-document data. Use `docker compose down` without `-v` when done.
+The next action is branch integration by the maintainer's choice. Do not repeat Tasks 1–14. The review
+fixes include idempotent rule creation, persisted replay paths, atomic collection cleanup enqueue,
+unreadable-file preservation, departed-path reindexing, directory-rule pagination, recovery request
+validation, descriptor-pinned downloads, authenticated API documentation, complete unfiltered
+reindexing, canonical-path retagging, and best-effort rule resubmission. The generated real-container
+lifecycle test covers the major flows through Compose. On 2026-09-28, the host suite passed with 160
+passed and 8 container-dependent skips, and the required-container suite passed all 9 checks. Lint,
+typecheck and build passed. The isolated acceptance Compose project was stopped with
+`docker compose down` and its named volumes were preserved.
 
 Things a resuming agent will otherwise get wrong:
 

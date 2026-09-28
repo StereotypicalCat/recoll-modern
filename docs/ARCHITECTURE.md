@@ -113,6 +113,10 @@ proxy networks.
 Membership, rule, and reindex writes create versioned, durable jobs. The worker updates SQLite
 provenance, exports the membership map, and forces affected paths through the engine. Document listing
 derives effective membership from SQLite and includes direct and rule provenance.
+An unfiltered reindex always includes the document root, even when rule reconciliation also changed
+individual paths. Observing an earlier duplicate forces both the new and former canonical paths
+through Recoll so only the canonical copy carries collection tags. Resubmitting a persistent rule in
+best-effort mode retains prior members under discovery-error paths, as normal reconciliation does.
 
 Search passes all requested collection IDs into one engine query, then verifies hit paths and effective
 membership in SQLite before returning them. Full-text and original-file routes resolve a live canonical
@@ -139,6 +143,8 @@ select returned fields; only `document_id` is unconditional, and inline full tex
 route, cookie, redirect, OpenAPI URL and generated link supports a configured mount prefix. Forwarded
 prefix and origin data are used only from trusted proxies. The exact endpoints and error codes are the
 contract in `docs/specs/001-search-engine-api.md`.
+The built-in OpenAPI JSON and documentation pages also require a valid session, including the Swagger
+OAuth redirect route; prefix middleware applies that guard after normalizing the mount path.
 
 ## Verified Recoll mechanics
 
@@ -184,8 +190,7 @@ Closed by the 001 brainstorm (2026-09-18) — see `docs/DECISIONS.md` for the re
    text is bounded, and full text and file download are separate endpoints.
 
 The remaining 001 design questions — component boundaries, schema, HTTP surface, pagination, error
-semantics and test strategy — are closed in `docs/specs/001-search-engine-api.md`. That spec remains
-draft until maintainer sign-off.
+semantics and test strategy — are closed in the approved `docs/specs/001-search-engine-api.md`.
 
 ## External dependencies
 
@@ -216,4 +221,4 @@ for that spec.
 
 ## Known rough edges
 
-None yet — nothing has been built. Cross-linked backlog: `docs/TODO.md`.
+See the deferred investigations and known issues in `docs/TODO.md`.

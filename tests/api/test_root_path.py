@@ -9,6 +9,9 @@ from recoll_modern.engine.fake import FakeEngine
 
 
 def test_cookie_and_openapi_honor_root_path(prefixed_client: TestClient) -> None:
+    anonymous = prefixed_client.get("/recoll/openapi.json")
+    assert anonymous.status_code == 401
+    assert anonymous.json()["error"]["code"] == "unauthenticated"
     response = prefixed_client.post(
         "/recoll/auth/login", json={"username": "admin", "password": "secret-password"}
     )
@@ -16,6 +19,15 @@ def test_cookie_and_openapi_honor_root_path(prefixed_client: TestClient) -> None
     assert "Path=/recoll" in response.headers["set-cookie"]
     assert prefixed_client.get("/recoll/openapi.json").status_code == 200
     assert prefixed_client.get("/auth/login").status_code == 404
+
+
+@pytest.mark.parametrize(
+    "path", ["/openapi.json", "/docs", "/docs/oauth2-redirect", "/redoc"]
+)
+def test_api_documentation_requires_session(app_client: TestClient, path: str) -> None:
+    response = app_client.get(path)
+    assert response.status_code == 401
+    assert response.json()["error"]["code"] == "unauthenticated"
 
 
 def test_trusted_forwarded_prefix_routes_request(

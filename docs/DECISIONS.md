@@ -3,6 +3,19 @@
 Append-only, newest first. Never edit or delete an entry — supersede it with a new one that links back.
 One entry per decision a future maintainer would otherwise have to reverse-engineer.
 
+## 2026-09-28 — Guard generated API documentation with the service session
+**Status:** accepted
+**Context:** FastAPI exposes generated OpenAPI and documentation routes outside ordinary route
+dependencies. The accepted spec requires authentication for every route except health and login while
+also requiring OpenAPI to work under a configured mount prefix.
+**Decision:** enforce the existing session check on the generated routes in prefix middleware after
+path normalization. Keep OpenAPI and the documentation pages available to logged-in clients.
+**Alternatives:** leave documentation public (violates R24); disable it (violates the intended OpenAPI
+surface under R29); add a separate authentication mechanism for documentation (unnecessary state).
+**Consequences:** generated documentation shares the API's cookie authentication and URL prefix.
+
+---
+
 ## 2026-09-27 — Persist replay paths and pin original downloads
 **Status:** accepted
 **Context:** Review found that a job could mutate rule or collection state before its indexing step

@@ -3,8 +3,8 @@
 A modern, self-hosted web UI and MCP server on top of [Recoll](https://www.lesbonscomptes.com/recoll/)
 full-text search, with support for multiple independent collections.
 
-Status: the authenticated search API and Docker deployment are implemented. Final contract and
-security acceptance coverage for spec 001 remains; the web UI and MCP server are later specs.
+Status: spec 001's authenticated search API and Docker deployment have completed acceptance and
+review checks. The web UI and MCP server are later specs.
 
 ## Run with Docker
 

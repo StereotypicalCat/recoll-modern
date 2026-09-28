@@ -70,3 +70,36 @@ def test_collection_reindex_includes_departed_rule_path(
             break
         time.sleep(0.01)
     assert any(str(file) in batch for batch in engine.forced_paths)
+
+
+def test_unfiltered_reindex_includes_document_root_after_rule_change(
+    authenticated: tuple[TestClient, str], tmp_path: Path
+) -> None:
+    client, csrf = authenticated
+    root = tmp_path / "docs"
+    books = root / "books"
+    books.mkdir()
+    (books / "a.txt").write_text("a")
+    headers = {"X-CSRF-Token": csrf}
+    collection_id = client.post(
+        "/collections", headers=headers, json={"name": "Books"}
+    ).json()["id"]
+    created = client.post(
+        f"/collections/{collection_id}/memberships", headers=headers,
+        json={"sources": [{"type": "directory", "path": "books", "mode": "persistent"}]},
+    )
+    job_id = created.json()["job"]["id"]
+    for _ in range(100):
+        if client.get(f"/jobs/{job_id}").json()["job"]["state"] == "completed":
+            break
+        time.sleep(0.01)
+    engine = cast(FastAPI, client.app).state.engine
+    engine.forced_paths.clear()
+    (books / "b.txt").write_text("b")
+    refreshed = client.post("/jobs/reindex", headers=headers, json={})
+    refresh_id = refreshed.json()["job"]["id"]
+    for _ in range(100):
+        if client.get(f"/jobs/{refresh_id}").json()["job"]["state"] == "completed":
+            break
+        time.sleep(0.01)
+    assert any(str(root) in batch for batch in engine.forced_paths)

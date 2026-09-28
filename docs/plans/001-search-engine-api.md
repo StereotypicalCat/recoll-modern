@@ -1032,6 +1032,6 @@ git add AGENTS.md README.md pyproject.toml uv.lock src tests helper docker Docke
 git commit -m "test: verify search engine API acceptance"
 ```
 
-- [ ] **Step 6: Request review before integration**
+- [x] **Step 6: Request review before integration**
 
 Invoke `superpowers:requesting-code-review`, resolve findings with `superpowers:receiving-code-review`, rerun the complete verification matrix, then use `superpowers:finishing-a-development-branch`. Do not merge, push, or use GitHub tooling; this repository uses Gitea and integration is the maintainer's decision.

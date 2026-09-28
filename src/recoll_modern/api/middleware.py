@@ -2,10 +2,12 @@
 
 import ipaddress
 
+from starlette.requests import Request
 from starlette.responses import JSONResponse
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 from recoll_modern.config import Settings
+from recoll_modern.domain.errors import AppError
 
 
 class PrefixMiddleware:
@@ -56,4 +58,19 @@ class PrefixMiddleware:
             if path == prefix or path.startswith(prefix + "/"):
                 scope["path"] = path[len(prefix):] or "/"
             scope["root_path"] = prefix
+        if scope["type"] == "http" and scope["path"] in (
+            "/openapi.json", "/docs", "/docs/oauth2-redirect", "/redoc"
+        ):
+            request = Request(scope)
+            try:
+                request.app.state.auth.authenticate(
+                    request.cookies.get("recoll_modern_session"), unsafe=False
+                )
+            except AppError as error:
+                response = JSONResponse(
+                    {"error": {"code": error.code, "message": error.message,
+                               "details": dict(error.details)}}, status_code=error.status
+                )
+                await response(scope, receive, send)
+                return
         await self.app(scope, receive, send)

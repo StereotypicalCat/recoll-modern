@@ -44,6 +44,12 @@ def reconcile_rule(
         if (record := documents.by_path(path)) is not None
         and record.content_hash in previous_hashes
     }
+    previous_canonical = {
+        record.canonical_path
+        for file in report.files
+        if (record := documents.get(file.content_hash)) is not None
+        and record.canonical_path is not None
+    }
     observed = documents.observe_files(list(report.files), reconcile_paths=known_paths)
     changed = memberships.replace_rule_members(
         rule_id, [file.content_hash for file in report.files] + sorted(protected_hashes)
@@ -54,5 +60,5 @@ def reconcile_rule(
         if document.canonical_path is not None
     ]
     return ReconcileResult(
-        report, tuple(sorted(set(changed + canonical_changes) | retired_paths))
+        report, tuple(sorted(set(changed + canonical_changes) | retired_paths | previous_canonical))
     )

@@ -3,8 +3,8 @@
 A modern web UI and MCP server layered on Recoll full-text search: self-hosted via Docker, managing
 several independent collections (e.g. `techbooks`, `cookbooks`).
 
-**Status: greenfield.** No application code and no stack chosen yet. The first non-trivial task is a
-spec, not code — see Workflow.
+**Status:** spec 001's authenticated search API and Docker deployment are implemented. The web UI,
+MCP server, and multi-user management are later specs — see Workflow.
 
 `AGENTS.md` is the single source of truth for agents here. `CLAUDE.md` and `GEMINI.md` only point here.
 On demand: `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`, `docs/TODO.md`, `PRODUCT.md`.
@@ -56,8 +56,8 @@ There is no `DESIGN.md` yet; the first UI build writes one, and after that never
 
 ## Architecture
 
-Nothing is built yet. `docs/ARCHITECTURE.md` holds the intended shape and the six open design questions
-the first spec must close — read it before proposing any structure.
+`docs/ARCHITECTURE.md` describes the implemented service and delivery order. Its original six design
+questions were closed in spec 001; read it before proposing new structure.
 
 ## Boundaries
 

@@ -143,7 +143,7 @@ def create_app(settings: Settings | None = None, engine: Engine | None = None) -
             for path, ids in memberships.membership_map_rows(policy.root):
                 if requested_ids.intersection(ids):
                     selected.add(path)
-            if not selected and not paths and not collections_requested:
+            if not paths and not collections_requested:
                 selected.add(str(policy.root))
             if selected:
                 engine.force_reindex(tuple(sorted(selected)))
