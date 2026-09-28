@@ -1,5 +1,5 @@
 ---
-status: draft
+status: in-progress
 spec: docs/specs/006-gitea-image-publishing.md
 ---
 
@@ -44,11 +44,11 @@ spec: docs/specs/006-gitea-image-publishing.md
 - `tags_for_ref(ref: str) -> list[str]`: returns the tag suffixes for a `refs/heads/main` or `refs/tags/vX.Y.Z` ref; returns an empty list otherwise.
 - CLI receives a ref and writes newline-separated full image references to stdout. The workflow consumes these references. Invalid refs return no tags, not a guessed tag.
 
-- [ ] **Step 1: Write failing tests** for main (`["main"]`), `v1.2.3` (`["v1.2.3", "latest"]`), prerelease/malformed versions, branch names containing `main`, and pull request refs (empty results). Assert CLI output uses the exact registry image.
-- [ ] **Step 2: Run** `uv run pytest tests/test_image_tags.py -v`; confirm the new tests fail because the module is absent.
-- [ ] **Step 3: Implement** `tags_for_ref` and the CLI in `scripts/image_tags.py` with an anchored `v[0-9]+\.[0-9]+\.[0-9]+` release match.
-- [ ] **Step 4: Run** `uv run pytest tests/test_image_tags.py -v` and `uv run ruff check scripts tests/test_image_tags.py`; confirm both pass.
-- [ ] **Step 5: Commit** the script, tests and checked plan boxes as `feat: define published image tags`.
+- [x] **Step 1: Write failing tests** for main (`["main"]`), `v1.2.3` (`["v1.2.3", "latest"]`), prerelease/malformed versions, branch names containing `main`, and pull request refs (empty results). Assert CLI output uses the exact registry image.
+- [x] **Step 2: Run** `uv run pytest tests/test_image_tags.py -v`; confirm the new tests fail because the module is absent.
+- [x] **Step 3: Implement** `tags_for_ref` and the CLI in `scripts/image_tags.py` with an anchored `v[0-9]+\.[0-9]+\.[0-9]+` release match.
+- [x] **Step 4: Run** `uv run pytest tests/test_image_tags.py -v` and `uv run ruff check scripts tests/test_image_tags.py`; confirm both pass.
+- [x] **Step 5: Commit** the script, tests and checked plan boxes as `feat: define published image tags`.
 
 ### Task 2: Gitea checks and publishing
 
