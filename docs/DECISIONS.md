@@ -3,6 +3,19 @@
 Append-only, newest first. Never edit or delete an entry — supersede it with a new one that links back.
 One entry per decision a future maintainer would otherwise have to reverse-engineer.
 
+## 2026-09-28 — Default registry login to the triggering Gitea account
+**Status:** accepted
+**Context:** The first publish run received `REGISTRY_TOKEN` but no `REGISTRY_USERNAME`, so Docker
+login stopped with `username is empty`. A working Gitea workflow uses `gitea.actor` for that login.
+**Decision:** default the registry username to Gitea's GitHub-compatible `github.actor` context; an
+explicit `REGISTRY_USERNAME` secret overrides it when the token belongs to another account.
+**Alternatives:** require a second secret for the common case (caused the first-run failure); always
+use the repository owner (wrong for a token owned by a collaborating account).
+**Consequences:** one package-write PAT is enough when its owner triggers the push. Other token owners
+must supply the optional username secret.
+
+---
+
 ## 2026-09-28 — Isolate registry credentials and tag the built image ID
 **Status:** accepted
 **Context:** A persistent Gitea runner can retain Docker login credentials, and jobs sharing a Docker

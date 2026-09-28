@@ -118,9 +118,10 @@ these checks when Compose is not running. Recoll commands run only inside the co
 
 Enable repository Actions and use a runner with the `ubuntu-latest` label, Python 3, `uv` setup support,
 and a working Docker CLI/daemon. Run jobs in isolated containers so a later job cannot read another
-job's home directory. In the repository's Actions secrets, set `REGISTRY_USERNAME` to the
-Gitea account that owns the publishing token and `REGISTRY_TOKEN` to a personal access token with
-package **Read & Write** permission. Gitea currently [requires a PAT for Actions package
+job's home directory. Set the repository Actions secret `REGISTRY_TOKEN` to a personal access token
+with package **Read & Write** permission. The workflow uses the triggering Gitea account as the
+registry username by default. If the token belongs to a different account, set `REGISTRY_USERNAME`
+to that account in repository Actions secrets. Gitea currently [requires a PAT for Actions package
 publishing](https://docs.gitea.com/usage/actions/comparison/); the built-in job token does not publish
 OCI packages. The workflow checks pull requests without registry credentials and publishes only after
 checks pass on `main` or a full `vX.Y.Z` tag. No server deployment is performed by CI.
