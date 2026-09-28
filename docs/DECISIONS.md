@@ -3,6 +3,22 @@
 Append-only, newest first. Never edit or delete an entry — supersede it with a new one that links back.
 One entry per decision a future maintainer would otherwise have to reverse-engineer.
 
+## 2026-09-28 — Publish one amd64 image through Gitea Actions
+**Status:** accepted
+**Context:** The Docker deployment exists, but operators must build it locally. [Gitea's documented job
+token limitation](https://docs.gitea.com/usage/actions/comparison/) means the workflow needs separate
+package credentials.
+**Decision:** run checks and build on pull requests, main and version tags. After checks, publish
+`gitea.lucaswinther.info/lucasw89/recoll-modern:main` for main and `:vX.Y.Z` plus `:latest` for a full
+version tag. Use a package-write personal access token stored as repository Actions secrets. The first
+published architecture is `linux/amd64`; the existing local build remains available.
+**Alternatives:** tag every main commit as `latest` (makes releases ambiguous); use Buildx for multiple
+architectures now (requires more runner setup); use `GITEA_TOKEN` (currently lacks package publishing).
+**Consequences:** operators can pin a version, while `main` is a development image. Publishing requires
+a Docker-capable Gitea runner and configured secrets; no external deploy occurs automatically.
+
+---
+
 ## 2026-09-28 — Reject non-regular explicit sources before opening
 **Status:** accepted
 **Context:** Directory discovery filters non-regular entries, but an explicit file source could name

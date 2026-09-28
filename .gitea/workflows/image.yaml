@@ -1,0 +1,62 @@
+name: Check and publish image
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - name: Install locked dependencies
+        run: uv sync --locked
+      - name: Test
+        run: uv run pytest
+      - name: Lint
+        run: uv run ruff check .
+      - name: Type check
+        run: uv run mypy src tests
+      - name: Build image
+        run: docker build --platform linux/amd64 -t recoll-modern:ci .
+
+  publish:
+    needs: checks
+    if: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')) }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Resolve publish tags
+        id: tags
+        run: |
+          python3 scripts/image_tags.py "$GITHUB_REF" > image-tags.txt
+          if [ -s image-tags.txt ]; then
+            echo "valid=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Log in to Gitea registry
+        if: ${{ steps.tags.outputs.valid == 'true' }}
+        env:
+          REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
+          REGISTRY_TOKEN: ${{ secrets.REGISTRY_TOKEN }}
+        run: |
+          printf '%s' "$REGISTRY_TOKEN" | docker login gitea.lucaswinther.info --username "$REGISTRY_USERNAME" --password-stdin
+      - name: Build and push
+        if: ${{ steps.tags.outputs.valid == 'true' }}
+        run: |
+          set -eu
+          docker build --platform linux/amd64 \
+            --label "org.opencontainers.image.source=https://gitea.lucaswinther.info/lucasw89/recoll-modern" \
+            --label "org.opencontainers.image.description=Self-hosted Recoll search API" \
+            --label "org.opencontainers.image.revision=$GITHUB_SHA" \
+            --label "org.opencontainers.image.version=$GITHUB_REF_NAME" \
+            -t recoll-modern:publish .
+          while IFS= read -r image; do
+            docker tag recoll-modern:publish "$image"
+            docker push "$image"
+          done < image-tags.txt

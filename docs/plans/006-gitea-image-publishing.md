@@ -62,11 +62,11 @@ spec: docs/specs/006-gitea-image-publishing.md
 - Produces `:main` on main, and `:vX.Y.Z` plus `:latest` on a full release tag after all gates pass.
 - Requires a Docker-capable Gitea runner with `ubuntu-latest` label and Gitea Actions secrets `REGISTRY_USERNAME` and `REGISTRY_TOKEN` for the publish job.
 
-- [ ] **Step 1: Run a failing structure check** (`test -f .gitea/workflows/image.yaml`) and record that no workflow exists.
-- [ ] **Step 2: Add** one workflow triggered by pull requests, main pushes and `v*` tag pushes. Use `actions/checkout`, `astral-sh/setup-uv`, `uv sync --locked`, `uv run pytest`, `uv run ruff check .`, `uv run mypy src tests`, and `docker build --platform linux/amd64`. Publishing is a separate job after checks, gated to main or validated release tags; log in through `docker login --password-stdin`, then tag and push each output of Task 1's script. Grant the built-in token read-only repository access; expose PAT secrets only in the publishing job. Add OCI labels for source, description, revision and ref/version.
-- [ ] **Step 3: Validate** workflow syntax with `docker run --rm -v "$PWD":/repo --workdir /repo rhysd/actionlint:1.7.12 .gitea/workflows/image.yaml`, inspect that no pull request path reaches login/push, then run project tests, lint, type checking and `docker build --platform linux/amd64 -t recoll-modern:ci .` locally. If the validator or Docker daemon is unavailable, record the exact unverified gate rather than claiming success.
-- [ ] **Step 4: Document** the new delivery boundary in `docs/ARCHITECTURE.md` and the tag/PAT/platform choice in an append-only `docs/DECISIONS.md` entry.
-- [ ] **Step 5: Commit** workflow, docs and checked plan boxes as `ci: publish Gitea container image`.
+- [x] **Step 1: Run a failing structure check** (`test -f .gitea/workflows/image.yaml`) and record that no workflow exists.
+- [x] **Step 2: Add** one workflow triggered by pull requests, main pushes and `v*` tag pushes. Use `actions/checkout`, `astral-sh/setup-uv`, `uv sync --locked`, `uv run pytest`, `uv run ruff check .`, `uv run mypy src tests`, and `docker build --platform linux/amd64`. Publishing is a separate job after checks, gated to main or validated release tags; log in through `docker login --password-stdin`, then tag and push each output of Task 1's script. Grant the built-in token read-only repository access; expose PAT secrets only in the publishing job. Add OCI labels for source, description, revision and ref/version.
+- [x] **Step 3: Validate** workflow syntax with `docker run --rm -v "$PWD":/repo --workdir /repo rhysd/actionlint:1.7.12 .gitea/workflows/image.yaml`, inspect that no pull request path reaches login/push, then run project tests, lint, type checking and `docker build --platform linux/amd64 -t recoll-modern:ci .` locally. If the validator or Docker daemon is unavailable, record the exact unverified gate rather than claiming success.
+- [x] **Step 4: Document** the new delivery boundary in `docs/ARCHITECTURE.md` and the tag/PAT/platform choice in an append-only `docs/DECISIONS.md` entry.
+- [x] **Step 5: Commit** workflow, docs and checked plan boxes as `ci: publish Gitea container image`.
 
 ### Task 3: Pull-based deployment and operator guide
 

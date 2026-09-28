@@ -31,6 +31,7 @@ web UI and (b) an MCP server, running in Docker, with several independent collec
 | `src/recoll_modern/indexing/map_export.py` | Writes a durable atomic map from canonical paths to opaque collection IDs |
 | `helper/` | C reader run by Recoll's `metadatacmds` for each indexed file |
 | `Dockerfile`, `compose.yaml`, `docker/` | Non-root Recoll runtime, read-only document mount, persistent state/index volumes and config templates |
+| `.gitea/workflows/image.yaml`, `scripts/image_tags.py` | CI checks and Gitea registry publication; Git refs select published tags |
 | `src/recoll_modern/engine/` | Shared Protocol, deterministic fake, and isolated Recoll Python/indexer adapter |
 | `src/recoll_modern/domain/auth.py`, `storage/auth.py` | Argon2 password checks, seeded administrator, hashed server-side sessions and CSRF verification |
 | `src/recoll_modern/api/` | HTTP auth, health, file browsing, collection/membership/rule/job resources, search, document retrieval, prefix/proxy handling and JSON errors |
@@ -130,6 +131,12 @@ helper. The non-root process copies Recoll config templates into the persistent 
 absent; Recoll may generate additional support files there. Compose mounts documents read-only and
 keeps the SQLite/config and Xapian index volumes separate. Initial health can be 503 until an indexing
 job creates the first index.
+
+Gitea Actions tests and builds on pull requests, main pushes and version tags. A dependent job publishes
+`linux/amd64` images only for main and full `vX.Y.Z` tags. `main` follows the branch; `latest` follows
+the newest pushed version tag. The job uses package-write repository Actions secrets. The local
+Compose deployment builds from source; `compose.published.yaml` pulls the registry image with the same
+runtime mounts.
 
 The host Recoll contract tests skip when no container is running. Required-container mode executes the
 adapter inside Compose, avoiding a host Recoll dependency; the generated-corpus test proves that a
