@@ -3,6 +3,33 @@
 Append-only, newest first. Never edit or delete an entry — supersede it with a new one that links back.
 One entry per decision a future maintainer would otherwise have to reverse-engineer.
 
+## 2026-09-28 — Reject non-regular explicit sources before opening
+**Status:** accepted
+**Context:** Directory discovery filters non-regular entries, but an explicit file source could name
+a FIFO. Opening that path for hashing blocks while waiting for a writer.
+**Decision:** open explicit sources with `O_NONBLOCK` and `O_NOFOLLOW`, inspect the opened descriptor's
+file mode, and return `file_hash_failed` for non-regular sources. Retain the existing before/after
+metadata checks for content changes.
+**Alternatives:** rely on directory discovery alone (explicit sources bypass it); open every path first
+(can block on a FIFO).
+**Consequences:** an explicit FIFO, including one swapped into place immediately before opening,
+is reported as a file error without blocking the worker.
+
+---
+
+## 2026-09-28 — Keep exception dataclasses mutable for transaction propagation
+**Status:** accepted
+**Context:** Python's generator-based context managers assign `__traceback__` while re-raising an
+exception. Frozen `AppError` and `PathPolicyError` dataclasses rejected that assignment, replacing an
+expected application error with `TypeError` when it crossed `Database.transaction()`.
+**Decision:** retain `slots=True` but remove `frozen=True` from both exception classes.
+**Alternatives:** move all error checks outside transactions (introduces races); wrap every exception
+at each transaction boundary (duplicates handling and can change error identity).
+**Consequences:** the original application or path error survives rollback and reaches its caller.
+The transaction regression test covers both exception types.
+
+---
+
 ## 2026-09-28 — Guard generated API documentation with the service session
 **Status:** accepted
 **Context:** FastAPI exposes generated OpenAPI and documentation routes outside ordinary route

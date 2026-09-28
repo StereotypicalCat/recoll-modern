@@ -2,6 +2,8 @@ import hashlib
 import os
 from pathlib import Path
 
+import pytest
+
 from recoll_modern.indexing.discovery import Source, discover_sources, hash_file_stable
 from recoll_modern.indexing.paths import PathPolicy
 
@@ -63,14 +65,14 @@ def test_unreadable_file_reports_error(tmp_path: Path, monkeypatch) -> None:  # 
     root = tmp_path / "docs"
     root.mkdir()
     (root / "a.txt").write_text("a")
-    real_open = Path.open
+    real_open = os.open
 
-    def denied(path: Path, *args: object, **kwargs: object):  # type: ignore[no-untyped-def]
-        if path.name == "a.txt":
+    def denied(path: str, flags: int, mode: int = 0o777, *, dir_fd: int | None = None) -> int:
+        if Path(path).name == "a.txt":
             raise PermissionError("denied")
-        return real_open(path, *args, **kwargs)  # type: ignore[call-overload]
+        return real_open(path, flags, mode, dir_fd=dir_fd)
 
-    monkeypatch.setattr(Path, "open", denied)
+    monkeypatch.setattr(os, "open", denied)
     report = discover_sources(PathPolicy(root), [Source.file("a.txt")])
     assert [error.code for error in report.errors] == ["file_unreadable"]
 
@@ -99,3 +101,66 @@ def test_discovery_hashes_file_bytes(tmp_path: Path) -> None:
     report = discover_sources(PathPolicy(tmp_path), [Source.file("a.txt")])
     assert report.files[0].content_hash == hashlib.sha256(b"hello").hexdigest()
     assert report.files[0].byte_size == 5
+
+
+def test_explicit_fifo_is_rejected_before_opening(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fifo = tmp_path / "pipe"
+    os.mkfifo(fifo)
+    real_open = Path.open
+
+    def guarded_open(path: Path, *args: object, **kwargs: object):  # type: ignore[no-untyped-def]
+        if path == fifo:
+            raise AssertionError("FIFO must not be opened")
+        return real_open(path, *args, **kwargs)  # type: ignore[call-overload]
+
+    monkeypatch.setattr(Path, "open", guarded_open)
+    report = discover_sources(PathPolicy(tmp_path), [Source.file("pipe")])
+    assert report.files == ()
+    assert [error.code for error in report.errors] == ["file_hash_failed"]
+
+
+def test_file_swapped_for_fifo_during_open_cannot_block(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    path = tmp_path / "source.txt"
+    path.write_text("regular")
+    real_stat = Path.stat
+    real_os_open = os.open
+    real_path_open = Path.open
+    swapped = False
+
+    def swap() -> None:
+        nonlocal swapped
+        if not swapped:
+            path.unlink()
+            os.mkfifo(path)
+            swapped = True
+
+    def stat_then_swap(target: Path, *args: object, **kwargs: object):  # type: ignore[no-untyped-def]
+        result = real_stat(target, *args, **kwargs)  # type: ignore[arg-type]
+        if target == path:
+            swap()
+        return result
+
+    def guarded_path_open(target: Path, *args: object, **kwargs: object):  # type: ignore[no-untyped-def]
+        if target == path:
+            raise AssertionError("blocking Path.open was used")
+        return real_path_open(target, *args, **kwargs)  # type: ignore[call-overload]
+
+    def swap_before_fd_open(
+        name: str, flags: int, mode: int = 0o777, *, dir_fd: int | None = None
+    ) -> int:
+        if str(name) == str(path):
+            swap()
+            assert flags & os.O_NONBLOCK
+        return real_os_open(name, flags, mode, dir_fd=dir_fd)
+
+    monkeypatch.setattr(Path, "stat", stat_then_swap)
+    monkeypatch.setattr(Path, "open", guarded_path_open)
+    monkeypatch.setattr(os, "open", swap_before_fd_open)
+    report = discover_sources(PathPolicy(tmp_path), [Source.file("source.txt")])
+    assert swapped
+    assert report.files == ()
+    assert [error.code for error in report.errors] == ["file_hash_failed"]

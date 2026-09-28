@@ -5,6 +5,8 @@ from pathlib import Path
 
 import pytest
 
+from recoll_modern.domain.errors import AppError
+from recoll_modern.indexing.paths import PathPolicyError
 from recoll_modern.storage.database import Database
 
 
@@ -69,3 +71,17 @@ def test_transaction_rolls_back_and_closes_connection(database: Database) -> Non
     assert transaction_connection is not None
     with pytest.raises(sqlite3.ProgrammingError):
         transaction_connection.execute("SELECT 1")
+
+
+@pytest.mark.parametrize(
+    "error",
+    [AppError("example", "Expected error", 422), PathPolicyError("invalid_source")],
+)
+def test_transaction_preserves_application_exceptions(
+    database: Database, error: Exception
+) -> None:
+    database.migrate()
+    with pytest.raises(type(error)) as caught:
+        with database.transaction():
+            raise error
+    assert caught.value is error

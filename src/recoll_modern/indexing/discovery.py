@@ -2,6 +2,7 @@
 
 import hashlib
 import os
+import stat
 from dataclasses import dataclass
 from os import stat_result
 from pathlib import Path
@@ -64,8 +65,15 @@ class DiscoveryReport:
 def hash_file_stable(path: Path) -> HashResult:
     """Hash a file and reject a concurrent metadata change."""
     try:
-        with path.open("rb") as stream:
+        with open(
+            path, "rb",
+            opener=lambda name, flags: os.open(
+                name, flags | os.O_NONBLOCK | getattr(os, "O_NOFOLLOW", 0)
+            ),
+        ) as stream:
             before = os.fstat(stream.fileno())
+            if not stat.S_ISREG(before.st_mode):
+                return HashResult(code="file_hash_failed")
             digest = hashlib.sha256()
             while chunk := stream.read(1024 * 1024):
                 digest.update(chunk)

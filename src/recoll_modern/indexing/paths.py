@@ -5,7 +5,7 @@ from pathlib import Path, PurePosixPath
 from unicodedata import normalize
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(slots=True)
 class PathPolicyError(Exception):
     code: str
 
