@@ -1,5 +1,5 @@
 ---
-status: draft
+status: approved
 plan: docs/plans/006-gitea-image-publishing.md
 supersedes: none
 ---
