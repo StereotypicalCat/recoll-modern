@@ -9,6 +9,9 @@ Spec 001 is implemented on `main`. The next product step is spec 002 (web UI). I
 
 ## Product and engineering backlog
 
+- [ ] After merging spec 006, configure a Docker-capable Gitea runner and package-write Actions secrets,
+      then verify a main-branch publish, a version-tag publish and a pull of the published image. Only
+      then mark spec 006 implemented.
 - [ ] Decide whether a persistent directory rule may target the document root. Current sources require
       a named child directory.
 - [ ] Investigate whether Recoll's Python binding exposes a native numeric relevance score. The API

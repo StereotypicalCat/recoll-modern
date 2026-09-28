@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 spec: docs/specs/006-gitea-image-publishing.md
 ---
 
@@ -80,9 +80,9 @@ spec: docs/specs/006-gitea-image-publishing.md
 - `RECOLL_MODERN_IMAGE` selects a complete image reference; default is `gitea.lucaswinther.info/lucasw89/recoll-modern:latest`.
 - Other environment inputs and volume paths match `compose.yaml`.
 
-- [ ] **Step 1: Run** `docker compose -f compose.published.yaml config` with example document/admin environment values; confirm failure because the file does not exist.
-- [ ] **Step 2: Add** a pull-only Compose file that preserves the local file's port, environment, read-only document mount, `service-state` and `recoll-index` volumes, health check and restart policy. Do not include a `build:` key.
-- [ ] **Step 3: Run** `docker compose -f compose.published.yaml config --format json` with example inputs. Inspect the resolved image, document `read_only` bind and both named volumes; confirm no build configuration.
-- [ ] **Step 4: Update** README with a quick-start using `docker login` when needed, `RECOLL_MODERN_IMAGE`, `docker compose ... pull`, `up -d`, `ps`, `logs`, and an update that retains volumes. Explain first boot, tag semantics, `linux/amd64`, backups, Gitea Actions enablement, runner and PAT secret setup. Keep local-build instructions and revise architecture for the two deployment paths.
-- [ ] **Step 5: Run** all project tests, lint and type checking again; verify Compose config for both files and `git diff --check`; inspect the whole diff against spec 006.
-- [ ] **Step 6: Mark** the plan done and spec implemented only after completed local gates, then commit deployment docs/config and checked plan boxes as `docs: explain pulling and running published image`. A real Gitea publish/pull remains an external acceptance step until a runner and secret are configured and the branch is merged.
+- [x] **Step 1: Run** `docker compose -f compose.published.yaml config` with example document/admin environment values; confirm failure because the file does not exist.
+- [x] **Step 2: Add** a pull-only Compose file that preserves the local file's port, environment, read-only document mount, `service-state` and `recoll-index` volumes, health check and restart policy. Do not include a `build:` key.
+- [x] **Step 3: Run** `docker compose -f compose.published.yaml config --format json` with example inputs. Inspect the resolved image, document `read_only` bind and both named volumes; confirm no build configuration.
+- [x] **Step 4: Update** README with a quick-start using `docker login` when needed, `RECOLL_MODERN_IMAGE`, `docker compose ... pull`, `up -d`, `ps`, `logs`, and an update that retains volumes. Explain first boot, tag semantics, `linux/amd64`, backups, Gitea Actions enablement, runner and PAT secret setup. Keep local-build instructions and revise architecture for the two deployment paths.
+- [x] **Step 5: Run** all project tests, lint and type checking again; verify Compose config for both files and `git diff --check`; inspect the whole diff against spec 006.
+- [x] **Step 6: Mark** the plan done after completed local gates, then commit deployment docs/config and checked plan boxes as `docs: explain pulling and running published image`. Keep the spec approved until a real Gitea publish/pull is verified after the branch is merged.
