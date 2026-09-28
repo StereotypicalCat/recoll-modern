@@ -4,7 +4,7 @@ import re
 import sys
 
 IMAGE = "gitea.lucaswinther.info/lucasw89/recoll-modern"
-RELEASE_REF = re.compile(r"refs/tags/(v[0-9]+\.[0-9]+\.[0-9]+)\Z")
+RELEASE_REF = re.compile(r"refs/tags/(v(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*))\Z")
 
 
 def tags_for_ref(ref: str) -> list[str]:

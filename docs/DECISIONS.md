@@ -3,6 +3,19 @@
 Append-only, newest first. Never edit or delete an entry — supersede it with a new one that links back.
 One entry per decision a future maintainer would otherwise have to reverse-engineer.
 
+## 2026-09-28 — Isolate registry credentials and tag the built image ID
+**Status:** accepted
+**Context:** A persistent Gitea runner can retain Docker login credentials, and jobs sharing a Docker
+daemon can overwrite a common local image tag while publishing concurrently.
+**Decision:** the publish script uses a fresh temporary Docker config, removes it on exit, and tags the
+immutable ID returned by its own build. Document isolated runner jobs as a deployment prerequisite.
+**Alternatives:** log in to the runner's default Docker config (credential residue); tag a shared local
+name (revision race); serialize all image jobs (unnecessary when each job tags its own image ID).
+**Consequences:** routine success and failure paths remove the PAT, and overlapping jobs do not reuse
+each other's local image tag. Runner isolation still matters for abrupt host failures and untrusted jobs.
+
+---
+
 ## 2026-09-28 — Publish one amd64 image through Gitea Actions
 **Status:** accepted
 **Context:** The Docker deployment exists, but operators must build it locally. [Gitea's documented job

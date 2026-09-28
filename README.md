@@ -31,21 +31,25 @@ access token with package **Read** permission as the Docker password:
 docker login gitea.lucaswinther.info
 ```
 
-Set an absolute host directory for documents and seed the first administrator. `:main` is available
-after a successful main-branch publish, even before the first version tag:
+Save the deployment settings in a private `.env` file in the same directory as the Compose file. This
+keeps the chosen image tag across shells. `:main` is available after a successful main-branch publish,
+even before the first version tag:
 
 ```sh
-export RECOLL_MODERN_DOCUMENTS=/srv/documents
-export RECOLL_MODERN_ADMIN_USERNAME=admin
-export RECOLL_MODERN_ADMIN_PASSWORD='use-a-long-unique-password'
-export RECOLL_MODERN_IMAGE=gitea.lucaswinther.info/lucasw89/recoll-modern:main
+umask 077
+cat > .env <<'EOF'
+RECOLL_MODERN_DOCUMENTS=/srv/documents
+RECOLL_MODERN_ADMIN_USERNAME=admin
+RECOLL_MODERN_ADMIN_PASSWORD=use-a-long-unique-password
+RECOLL_MODERN_IMAGE=gitea.lucaswinther.info/lucasw89/recoll-modern:main
+EOF
 docker compose -f compose.published.yaml pull
 docker compose -f compose.published.yaml up -d --no-build
 docker compose -f compose.published.yaml ps
 docker compose -f compose.published.yaml logs -f app
 ```
 
-Once a version appears in Gitea Packages, set `RECOLL_MODERN_IMAGE` to its tag, such as
+Once a version appears in Gitea Packages, edit `RECOLL_MODERN_IMAGE` in `.env` to its tag, such as
 `gitea.lucaswinther.info/lucasw89/recoll-modern:v1.2.3`, to pin that release. Omit
 `RECOLL_MODERN_IMAGE` to use `:latest` after the first version tag is published. The image is published
 only after the CI checks pass; a tag that has not been published cannot be pulled. To update, set the
@@ -53,10 +57,13 @@ desired tag and run `docker compose -f compose.published.yaml pull` followed
 by `docker compose -f compose.published.yaml up -d --no-build` again. Keep the same Compose project
 directory so its named volumes are reused.
 
-For a trusted local HTTP trial with `docker run`, use the same document and administrator variables:
+For a trusted local HTTP trial with `docker run`, export the settings for that shell:
 
 ```sh
-export RECOLL_MODERN_IMAGE=${RECOLL_MODERN_IMAGE:-gitea.lucaswinther.info/lucasw89/recoll-modern:main}
+export RECOLL_MODERN_DOCUMENTS=/srv/documents
+export RECOLL_MODERN_ADMIN_USERNAME=admin
+export RECOLL_MODERN_ADMIN_PASSWORD='use-a-long-unique-password'
+export RECOLL_MODERN_IMAGE=gitea.lucaswinther.info/lucasw89/recoll-modern:main
 docker pull "$RECOLL_MODERN_IMAGE"
 docker run -d --name recoll-modern --restart unless-stopped -p 127.0.0.1:8000:8000 \
   -e RECOLL_MODERN_ADMIN_USERNAME -e RECOLL_MODERN_ADMIN_PASSWORD \
@@ -110,7 +117,8 @@ these checks when Compose is not running. Recoll commands run only inside the co
 ## Publishing from Gitea
 
 Enable repository Actions and use a runner with the `ubuntu-latest` label, Python 3, `uv` setup support,
-and a working Docker CLI/daemon. In the repository's Actions secrets, set `REGISTRY_USERNAME` to the
+and a working Docker CLI/daemon. Run jobs in isolated containers so a later job cannot read another
+job's home directory. In the repository's Actions secrets, set `REGISTRY_USERNAME` to the
 Gitea account that owns the publishing token and `REGISTRY_TOKEN` to a personal access token with
 package **Read & Write** permission. Gitea currently [requires a PAT for Actions package
 publishing](https://docs.gitea.com/usage/actions/comparison/); the built-in job token does not publish

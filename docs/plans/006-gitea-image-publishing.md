@@ -86,3 +86,10 @@ spec: docs/specs/006-gitea-image-publishing.md
 - [x] **Step 4: Update** README with a quick-start using `docker login` when needed, `RECOLL_MODERN_IMAGE`, `docker compose ... pull`, `up -d`, `ps`, `logs`, and an update that retains volumes. Explain first boot, tag semantics, `linux/amd64`, backups, Gitea Actions enablement, runner and PAT secret setup. Keep local-build instructions and revise architecture for the two deployment paths.
 - [x] **Step 5: Run** all project tests, lint and type checking again; verify Compose config for both files and `git diff --check`; inspect the whole diff against spec 006.
 - [x] **Step 6: Mark** the plan done after completed local gates, then commit deployment docs/config and checked plan boxes as `docs: explain pulling and running published image`. Keep the spec approved until a real Gitea publish/pull is verified after the branch is merged.
+
+## Review follow-up
+
+- [x] Keep Docker registry credentials in a temporary config that is removed after success or failure.
+- [x] Tag the image ID returned by each build so concurrent jobs cannot swap a shared local tag.
+- [x] Reject release tags with leading-zero semantic-version components.
+- [x] Persist the selected image tag in the deployment `.env` example.

@@ -32,7 +32,7 @@ web UI and (b) an MCP server, running in Docker, with several independent collec
 | `helper/` | C reader run by Recoll's `metadatacmds` for each indexed file |
 | `Dockerfile`, `compose.yaml`, `docker/` | Non-root Recoll runtime, read-only document mount, persistent state/index volumes and config templates |
 | `compose.published.yaml` | Pull-only deployment with the same runtime settings and persistent mounts |
-| `.gitea/workflows/image.yaml`, `scripts/image_tags.py` | CI checks and Gitea registry publication; Git refs select published tags |
+| `.gitea/workflows/image.yaml`, `scripts/image_tags.py`, `scripts/publish_image.sh` | CI checks and Gitea registry publication; Git refs select published tags |
 | `src/recoll_modern/engine/` | Shared Protocol, deterministic fake, and isolated Recoll Python/indexer adapter |
 | `src/recoll_modern/domain/auth.py`, `storage/auth.py` | Argon2 password checks, seeded administrator, hashed server-side sessions and CSRF verification |
 | `src/recoll_modern/api/` | HTTP auth, health, file browsing, collection/membership/rule/job resources, search, document retrieval, prefix/proxy handling and JSON errors |

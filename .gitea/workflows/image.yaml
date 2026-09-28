@@ -32,31 +32,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Resolve publish tags
-        id: tags
-        run: |
-          python3 scripts/image_tags.py "$GITHUB_REF" > image-tags.txt
-          if [ -s image-tags.txt ]; then
-            echo "valid=true" >> "$GITHUB_OUTPUT"
-          fi
-      - name: Log in to Gitea registry
-        if: ${{ steps.tags.outputs.valid == 'true' }}
+      - name: Publish image
         env:
           REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
           REGISTRY_TOKEN: ${{ secrets.REGISTRY_TOKEN }}
-        run: |
-          printf '%s' "$REGISTRY_TOKEN" | docker login gitea.lucaswinther.info --username "$REGISTRY_USERNAME" --password-stdin
-      - name: Build and push
-        if: ${{ steps.tags.outputs.valid == 'true' }}
-        run: |
-          set -eu
-          docker build --platform linux/amd64 \
-            --label "org.opencontainers.image.source=https://gitea.lucaswinther.info/lucasw89/recoll-modern" \
-            --label "org.opencontainers.image.description=Self-hosted Recoll search API" \
-            --label "org.opencontainers.image.revision=$GITHUB_SHA" \
-            --label "org.opencontainers.image.version=$GITHUB_REF_NAME" \
-            -t recoll-modern:publish .
-          while IFS= read -r image; do
-            docker tag recoll-modern:publish "$image"
-            docker push "$image"
-          done < image-tags.txt
+        run: bash scripts/publish_image.sh
