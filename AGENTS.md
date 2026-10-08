@@ -3,8 +3,8 @@
 A modern web UI and MCP server layered on Recoll full-text search: self-hosted via Docker, managing
 several independent collections (e.g. `techbooks`, `cookbooks`).
 
-**Status:** spec 001's authenticated search API and Docker deployment are implemented. The web UI,
-MCP server, and multi-user management are later specs — see Workflow.
+**Status:** obsolete and archived — superseded by Knowledgenet (see README). Spec 001's search API and
+Docker deployment are implemented; the planned web UI, MCP server, and multi-user specs will not be built.
 
 `AGENTS.md` is the single source of truth for agents here. `CLAUDE.md` and `GEMINI.md` only point here.
 On demand: `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`, `docs/TODO.md`, `PRODUCT.md`.

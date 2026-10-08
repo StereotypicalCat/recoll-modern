@@ -442,3 +442,18 @@ layers. A split-package probe still produced a 253 MB compressed layer.
 **Consequences:** the service remains headless. The full image's largest compressed layer is 39.02 MB,
 and a local container confirms both Recoll commands and the Python binding are present. Registry
 publishing and pulling still require a successful Gitea Actions run.
+
+---
+
+## 2026-10-08 — Retire recoll-modern in favour of Knowledgenet
+**Status:** accepted
+**Context:** the Knowledgenet proposal (`lucasw89/knowledgenet`, `docs/PROPOSAL.md`) covers this
+project's goals — search, web UI, MCP access, multiple collections and multi-user permissions — and
+explicitly supersedes its direction: direct Xapian instead of Recoll, no Recoll/Python/FastAPI stack,
+and permissions designed in from the start rather than added after search.
+**Decision:** stop development here, mark the README obsolete, and archive the repository.
+**Alternatives:** keep building the web UI and MCP specs on Recoll, which the Knowledgenet proposal
+rules out.
+**Consequences:** spec 001 (search API and Docker image) remains as a read-only reference. Later specs
+listed in `docs/TODO.md` and `docs/ARCHITECTURE.md` will not be implemented here. Knowledgenet is still
+a proposal with no implementation, so nothing currently replaces the running service.

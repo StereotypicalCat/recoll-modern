@@ -1,5 +1,12 @@
 # recoll-modern
 
+> [!WARNING]
+> **This project is obsolete and archived.** It has been superseded by
+> [Knowledgenet](https://gitea.lucaswinther.info/lucasw89/knowledgenet), which replaces the
+> Recoll/Python/FastAPI direction with direct Xapian integration and covers the planned web UI, MCP
+> server and multi-user access. Knowledgenet is still at the proposal stage; this repository is kept
+> read-only for reference and receives no further development.
+
 A modern, self-hosted web UI and MCP server on top of [Recoll](https://www.lesbonscomptes.com/recoll/)
 full-text search, with support for multiple independent collections.
 
